@@ -133,7 +133,6 @@
           </el-table-column>
         </el-table>
 
-
       </div>
       <div class="center-box">
         <el-pagination background layout="prev, pager, next" :total="allPage" @current-change="handleCurrentChange">
@@ -557,21 +556,19 @@
     },
     mounted() {
       var that = this;
-      //this.myToken = localStorage.getItem('mytoken');
+      //this.myToken = localStorage.getItem('mytoken');this.myToken = localStorage.getItem('mytoken');
       this.userType = localStorage.getItem('myusertype');
       this.userName = localStorage.getItem('myusername');
 
 
-      //通过链接登录
+      //通过链接登录 暂时以?mode为依据
       //  http://localhost:8080/#/HomePage?login=Z3dxX2d3cUAyMDE4&mode=dispatch&project=A-20180524-1
-
-      var Request = new Object();
-      var Request2 = new Object();
-      Request = this.getRequest();
-      Request2 = this.getRequest2();
-      console.log(Request2);
-
       if (Request["mode"]) {
+        var Request = new Object();
+        var Request2 = new Object();
+        Request = this.getRequest();
+        Request2 = this.getRequest2();
+        console.log(Request2);
         console.log(Request["mode"]);
         this.keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         this.userState = Request2["mode"];
@@ -672,6 +669,9 @@
           .catch(function (error) {
             console.log(error);
           });
+      }
+      else{
+        this.myToken = localStorage.getItem('mytoken');
       }
 
 
