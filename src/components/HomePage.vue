@@ -147,7 +147,7 @@
           <span>筛选结果</span>
           <div>
             <el-button type="primary" v-show="showCreateWorkForm" @click="dialogWorkFormVisible = true">新建工单</el-button>
-            <el-button type="primary" v-show="showDealWorkForm" v-text="DealBtnText" @click="dialogDealWorkFormVisible = true"></el-button>
+            <el-button type="primary" v-show="showDealWorkForm" v-text="DealBtnText" @click="dialogDealWorkFormVisible = true;DealBtnState=false;"></el-button>
             <el-button type="primary" plain @click="exportAllChosenExcel">导出全部列表</el-button>
           </div>
 
@@ -1477,7 +1477,6 @@
       },
       submitDealWorkForm() {
         var that = this;
-        that.DealBtnState=false;
         var showFormWorkAllCourseDataIds = [];
         //this.showFormWorkAllCourseData.forEach(function (item) {
         this.tableDataNew.forEach(function (item) {
@@ -1493,13 +1492,17 @@
           "rename": that.dealWorkFormRename
         };
         extendedData = JSON.stringify(extendedData);
+        var dealNote="无";
+        if(that.dealWorkFormNote){
+          dealNote=that.dealWorkFormNote;
+        }
         this.$axios({
           method: 'post',
           url: myDealWorkFormTokenUrl,
           headers: {'Authorization': 'JWT ' + that.myToken},
           data: {
             "TaskType": "CourseDownload",
-            "TaskNote": that.dealWorkFormNote,
+            "TaskNote": dealNote,
             "ExtendedData": extendedData,
             "course": showFormWorkAllCourseDataIds
           }
@@ -1511,15 +1514,19 @@
               message: '任务已添加'
             });
             that.DealBtnState=true;
-            that.dialogWorkFormVisible = false;
-          } else if (res.status == 400) {
+            that.dialogDealWorkFormVisible = false;
+          } else if (res.status == 204) {
             that.$message({
               type: 'warning',
-              message: '错误！'
+              message: '重复操作'
             });
-            that.dialogWorkFormVisible = false;
+            //that.dialogWorkFormVisible = false;
           }
         }).catch(function (err) {
+          that.$message({
+            type: 'warning',
+            message: '错误！'
+          });
           console.log(err);
         });
         //更新工单数据
