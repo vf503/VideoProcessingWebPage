@@ -501,7 +501,7 @@
         showConfigBtn: false,
         showCreateWorkForm: true,
         showDealWorkForm: false,
-        DealBtnText:"",
+        DealBtnText:"下载新课",
 
         /*用于base64转中文*/
         keyStr: "",
