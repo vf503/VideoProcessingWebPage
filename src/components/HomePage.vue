@@ -563,7 +563,7 @@
 
       //通过链接登录 暂时以?mode为依据
       //  http://localhost:8080/#/HomePage?login=Z3dxX2d3cUAyMDE4&mode=dispatch&project=A-20180524-1
-      if (Request["mode"]) {
+      if (this.getRequest()["mode"]) {
         var Request = new Object();
         var Request2 = new Object();
         Request = this.getRequest();
@@ -621,16 +621,7 @@
                   console.log('ressss------------', res);
 
                   var workFormInfo = res.data;
-                  /*
-                  showFormWorkCreater:'',
-                  showFormWorkId:'',
-                  showFormWorkUserInfo:'',
-                  showFormWorkModal:'',
-                  showFormWorkRatio:'',
-                  showFormWorkNote:'',
-                  showFormWorkCheckDate:'',
-                  showFormWorkCheckNote:'',
-                  */
+
                   that.showFormWorkCreater = workFormInfo.user;
                   that.showFormWorkId = workFormInfo.id;
                   that.showFormWorkUserInfo = workFormInfo.custom;
@@ -1301,7 +1292,7 @@
       //
       PlayCourse(row) {
         if (row.DataType == '新课件') {
-          window.open('http://newpms.cei.cn/CourseFile/'+row.CourseId.slice(0,4)+'/' + row.CourseId + '/index.html');
+          window.open('http://203.207.118.112/CourseFile/'+row.CourseId.slice(0,4)+'/' + row.CourseId + '/index.html');
         }
         else if (row.DataType == '旧课件') {
           window.open('http://203.207.118.110/doc/' + row.CourseId + '/');
