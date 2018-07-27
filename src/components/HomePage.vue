@@ -1,6 +1,6 @@
 <template>
   <div class="main-div">
-    <app-head @getMenuIndex="getMenuIndeVal"></app-head>
+    <app-head @getMenuIndex="getMenuIndexVal"></app-head>
     <div class="search-box">
       <el-card class="box-card">
         <div>课程检索</div>
@@ -439,7 +439,7 @@
 </template>
 
 <script>
-  import appHead from '@/components/AppHead.vue';
+  import appHead from '@/components/AppHead.vue'
   import FileSaver from 'file-saver'
   import XLSX from 'xlsx'
 
@@ -547,7 +547,7 @@
         dealWorkFormModel: '',
         dealWorkFormRatio: '',
         dealWorkFormNote: '',
-        dealWorkFormRename: '',
+        dealWorkFormRename: '1',
 
         /*从后台获取的供选择的模板信息*/
         videoModelForChoose: [],
@@ -556,10 +556,9 @@
     },
     mounted() {
       var that = this;
-      //this.myToken = localStorage.getItem('mytoken');this.myToken = localStorage.getItem('mytoken');
+      //this.myToken = localStorage.getItem('mytoken');
       this.userType = localStorage.getItem('myusertype');
       this.userName = localStorage.getItem('myusername');
-
 
       //通过链接登录 暂时以?mode为依据
       //  http://localhost:8080/#/HomePage?login=Z3dxX2d3cUAyMDE4&mode=dispatch&project=A-20180524-1
@@ -700,7 +699,7 @@
     },
     methods: {
       //appHead
-      getMenuIndeVal(index) {
+      getMenuIndexVal(index) {
         this.MenuIndex=index;
         //console.log(this.MenuIndex);
       },
@@ -1151,10 +1150,7 @@
         return wbout;
       },
       fileSearch() {
-
         this.dialogTableVisible = true;
-
-
         this.X = XLSX;
         var rAbs = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
 
@@ -1175,6 +1171,7 @@
         }
       },
       excelSearchAndShowOnPage(mySheet) {
+        console.log(mySheet);
         var sheetSize = Object.getOwnPropertyNames(mySheet).length / 2 - 1;
 
         var idArray = [];
@@ -1184,14 +1181,15 @@
             var mySheetItem = {
               id: mySheet['A' + i]['v'],
               title: mySheet['B' + i]['v'],
-              status: 3//0:搜索成功且唯一；1：搜索不存在；2：搜索重复；3:未知；
+              //0:搜索成功且唯一；1：搜索不存在；2：搜索重复；3:未知；
+              status: 3
             };
             this.myExcel.push(mySheetItem);
           } else {
             var mySheetItem = {
               id: mySheet['A' + i]['v'],
               title: mySheet['B' + i]['v'],
-              status: 2//0:搜索成功且唯一；1：搜索不存在；2：搜索重复；3:未知；
+              status: 2
             };
             this.myExcelRepeat.push(mySheetItem);
           }

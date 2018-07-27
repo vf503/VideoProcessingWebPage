@@ -23,12 +23,25 @@
       data() {
         return {
           activeIndex: '1'
-        };
+        }
+      },
+      mounted() {
+        this.$emit('getMenuIndex',this.activeIndex)
+        console.log(this.activeIndex)
       },
       methods: {
         handleSelect(key, keyPath) {
           this.$emit('getMenuIndex',key);
-          //console.log(key, keyPath);
+          this.activeIndex=key
+          console.log(this.activeIndex)
+          if(key==1)
+          {
+            this.$router.push('/HomePage');
+          }
+          else if (key==2)
+          {
+            this.$router.push('/TaskList');
+          }
         }
       }
     }
