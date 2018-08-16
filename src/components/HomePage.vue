@@ -1290,7 +1290,13 @@
       //
       PlayCourse(row) {
         if (row.DataType == '新课件') {
-          window.open('http://203.207.118.112/CourseFile/'+row.CourseId.slice(0,4)+'/' + row.CourseId + '/index.html');
+          //console.log(row.SourceCourseId);
+          if(row.SourceCourseId === null) {
+            window.open('http://203.207.118.112/CourseFile/'+row.CourseId.slice(0,4)+'/' + row.CourseId + '/publish/index.html');
+          }
+          else {
+            window.open('http://203.207.118.112/CourseFile/'+row.CourseId.slice(0,4)+'/' + row.CourseId + '/index.html');
+          }
         }
         else if (row.DataType == '旧课件') {
           window.open('http://203.207.118.110/doc/' + row.CourseId + '/');

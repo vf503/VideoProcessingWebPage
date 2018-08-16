@@ -26,7 +26,7 @@
       <el-table-column
         prop="TaskState"
         label="状态"
-        width="120">
+        width="200">
       </el-table-column>
       <el-table-column
         prop="creator"
@@ -64,7 +64,7 @@
       <el-table-column
         prop="TaskState"
         label="状态"
-        width="120">
+        width="200">
       </el-table-column>
       <el-table-column
         prop="creator"
