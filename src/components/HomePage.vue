@@ -489,7 +489,7 @@
 
         tableDataNew: [], /*当前已选新课列表*/
         tableDataOld: [], /*当前已选旧课列表*/
-        allTableChosen: [], /*当前选中的所有课程列表——用于导出选中课程列表*/
+        allTableChosen: [], /*当前已选的所有课程列表——用于导出选中课程列表*/
 
         newCourseIds: [], /*当前已选新课列表的课程id*/
         oldCourseIds: [], /*当前已选旧课列表的课程id*/
@@ -1126,7 +1126,10 @@
       },
       exportAllExcel() {
         /* generate workbook object from table */
-        var wb = XLSX.utils.table_to_book(document.querySelector('#all_data_table'));
+        var ws = XLSX.utils.json_to_sheet(this.allTableData, {header:["CourseId", "title", "GroupName", "lecturer_name", "post", "TempletType", "CreateDate", "DataType", "type", "creator", "progress", "duration"]});
+        var wb = new XLSX.utils.book_new();
+        //var wb;
+        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
         /* get binary string as output */
         var wbout = XLSX.write(wb, {bookType: 'xlsx', bookSST: true, type: 'array'});
         try {
