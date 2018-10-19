@@ -4,28 +4,39 @@
     <div class="search-box">
       <el-card class="box-card">
         <div>课程检索</div>
-        <el-input type="text" v-model="className" placeholder="请输入课程名称"></el-input>
-        <el-input type="text" v-model="classTeacher" placeholder="请输入讲师名称"></el-input>
-        <el-input type="text" v-model="classKeyword" placeholder="请输入关键词"></el-input>
-        <el-select v-model="videoType" placeholder="请选择视频类型">
+        <el-input type="text" v-model="className" placeholder="输入课程名称"></el-input>
+        <el-input type="text" v-model="classTeacher" placeholder="输入讲师名称"></el-input>
+        <el-input type="text" v-model="classKeyword" placeholder="输入关键词"></el-input>
+        <el-select
+          v-model="videoType" style="width: 153px" placeholder="选择视频类型">
+          <el-option label="不限课件类型" value=""></el-option>
           <el-option label="单视频" value="单视频"></el-option>
           <el-option label="三分屏" value="三分屏"></el-option>
           <el-option label="微课" value="微课"></el-option>
         </el-select>
+        <el-select v-model="courseState" style="width: 153px" placeholder="选择状态">
+          <el-option label="不限发布状态" value="none"></el-option>
+          <el-option label="已审核" value="made"></el-option>
+          <el-option label="已发布" value="published"></el-option>
+        </el-select>
         <br/>
-        <span class="is-especial-class">日期范围 :</span>
+        <div style="margin-left: 20px;">
           <el-date-picker
+            style="width: 330px"
             v-model="classDate"
             type="daterange"
-            align="right"
             unlink-panels
             range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             :default-time="['00:00:00', '23:59:59']"
             :picker-options="RangePickerOptions">
-        </el-date-picker>
-        <br/>
+          </el-date-picker>
+          <el-select v-model="publishType" style="width: 153px" placeholder="选择版面">
+            <el-option label="不限发布版面" value="none"></el-option>
+            <el-option label="党政版" value="dz"></el-option>
+          </el-select>
+        </div>
         <span class="is-especial-class">是否定制课 :</span>
         <el-radio v-model="isEspecialClass" label="1">是</el-radio>
         <el-radio v-model="isEspecialClass" label="0">否</el-radio>
@@ -156,8 +167,8 @@
         <div class="search-table-head">
           <span>筛选结果</span>
           <div>
-            <el-button type="primary" v-show="showCreateWorkForm" @click="dialogWorkFormVisible = true;var now = new Date();newWorkFormId2=now.getHours().toString()+now.getMinutes().toString()+now.getSeconds().toString()">新建工单</el-button>
-            <el-button type="primary" v-show="showDealWorkForm" v-text="DealBtnText" @click="dialogDealWorkFormVisible = true;DealBtnState=false;"></el-button>
+            <el-button type="primary" v-show="showCreateWorkForm" @click="dialogWorkFormVisible = true;let now = new Date();newWorkFormId2=now.getHours().toString()+now.getMinutes().toString()+now.getSeconds().toString()">新建工单</el-button>
+            <el-button type="primary" v-show="showDealWorkForm" v-text="DealBtnText" @click="dialogDealWorkFormVisible = true"></el-button>
             <el-button type="primary" plain @click="exportAllChosenExcel">导出全部列表</el-button>
           </div>
 
@@ -256,7 +267,7 @@
     <!--新建工单对话框-->
     <el-dialog title="新建工单" :visible.sync="dialogWorkFormVisible" class="new-course-config">
       <el-row :gutter="20">
-        <el-col :span="4">工单编号:</el-col>
+        <el-col :span="3">工单编号:</el-col>
         <el-col :span="2">
           <el-input type="text" :disabled="true" v-model="newWorkFormId1"></el-input>
           <!--<div class="work-form-tips">请填写一位大写字母</div>-->
@@ -272,25 +283,26 @@
         </el-col>
       </el-row>
       <el-row :gutter="20">
-        <el-col :span="4">用户信息:</el-col>
+        <el-col :span="3">用户信息:</el-col>
         <el-col :span="20">
           <el-input type="text" v-model="newWorkFormUserInfo"></el-input>
         </el-col>
       </el-row>
       <el-row :gutter="20">
-        <el-col :span="4">下载课件:</el-col>
+        <el-col :span="3">下载课件:</el-col>
         <el-col :span="20">
-          <el-select v-model="newWorkFormModel" placeholder="请选择模板">
-            <el-option label="不需要" value=""></el-option>
+          <el-checkbox v-model="newWorkCourseChecked">需要</el-checkbox>
+          <el-select v-model="newWorkFormModel" v-show="newWorkCourseChecked" placeholder="请选择模板">
+            <!--<el-option label="无" value=""></el-option>-->
             <el-option v-for="(item,index) in videoModelForChoose" :label="item.name" :value="item.id"
                        :key="index"></el-option>
           </el-select>
         </el-col>
       </el-row>
       <el-row :gutter="20">
-        <el-col :span="4">输出视频:</el-col>
-        <el-col :span="20">
-          <el-select v-model="newWorkFormRatio" placeholder="请选择分辨率">
+        <el-col :span="3">输出视频:</el-col>
+        <el-col :span="4">
+          <el-select v-model="newWorkFormRatio" @change="handleRatioCommand" placeholder="请选择分辨率">
             <el-option label="不需要" value=""></el-option>
             <el-option label="352*288" value="352*288"></el-option>
             <el-option label="640*360" value="640*360"></el-option>
@@ -298,24 +310,37 @@
             <el-option label="1280*720" value="1280*720"></el-option>
           </el-select>
         </el-col>
-      </el-row>
-      <el-row :gutter="20">
-        <el-col :span="4">自定义码率:</el-col>
-        <el-col :span="2">
+        <el-col :span="3">自定义码率:</el-col>
+        <el-col :span="3">
           <el-input type="text" v-model="newWorkFormBitRate"></el-input>
         </el-col>
-        <el-col :span="6">
+        <el-col :span="3">
           单位：K (1M=1024K)
+        </el-col>
+        <el-col :span="3">是否加水印:</el-col>
+        <el-col :span="4">
+          <el-radio v-model="newWorkIsWaterMark" label="1">是</el-radio>
+          <el-radio v-model="newWorkIsWaterMark" label="0">否</el-radio>
         </el-col>
       </el-row>
       <el-row :gutter="20">
-        <el-col :span="4">备注:</el-col>
+        <el-col :span="3">单独输出素材:</el-col>
+        <el-col :span="20">
+          <el-checkbox-group v-model="newWorkAttachmentList">
+            <el-checkbox label="text">全文(TXT格式)</el-checkbox>
+            <el-checkbox label="ppt">PPT</el-checkbox>
+            <el-checkbox label="test">考题</el-checkbox>
+         </el-checkbox-group>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="3">备注:</el-col>
         <el-col :span="20">
           <el-input type="textarea" v-model="newWorkFormNote"></el-input>
         </el-col>
       </el-row>
       <el-row :gutter="20">
-        <el-col :span="4">完成期限:</el-col>
+        <el-col :span="3">完成期限:</el-col>
         <el-col :span="20">
           <el-date-picker
             v-model="newWorkDeadLine"
@@ -325,34 +350,27 @@
         </el-col>
       </el-row>
       <el-row :gutter="20">
-        <el-col :span="4">是否加水印:</el-col>
-        <el-col :span="20">
-          <el-radio v-model="newWorkIsWaterMark" label="1">是</el-radio>
-          <el-radio v-model="newWorkIsWaterMark" label="0">否</el-radio>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20">
-        <el-col :span="4">是否做图片:</el-col>
+        <el-col :span="3">是否做图片:</el-col>
         <el-col :span="20">
           <el-radio v-model="newWorkIsPic" label="1">是</el-radio>
           <el-radio v-model="newWorkIsPic" label="0">否</el-radio>
         </el-col>
       </el-row>
       <el-row :gutter="20" v-show="newWorkIsPic == 1">
-        <el-col :span="4">图片要求:</el-col>
+        <el-col :span="3">图片要求:</el-col>
         <el-col :span="20">
           <el-input type="textarea" v-model="newWorkPicNote"></el-input>
         </el-col>
       </el-row>
       <el-row :gutter="20">
-        <el-col :span="4">是否做模板:</el-col>
+        <el-col :span="3">是否做模板:</el-col>
         <el-col :span="20">
           <el-radio v-model="newWorkIsTemplate" label="1">是</el-radio>
           <el-radio v-model="newWorkIsTemplate" label="0">否</el-radio>
         </el-col>
       </el-row>
       <el-row :gutter="20"v-show="newWorkIsTemplate == '1'">
-        <el-col :span="4">模板要求:</el-col>
+        <el-col :span="3">模板要求:</el-col>
         <el-col :span="20">
           <el-input type="textarea" v-model="newWorkTemplateNote"></el-input>
         </el-col>
@@ -420,16 +438,19 @@
         </el-row>
       </el-card>
       <!-- 处理工单(流程)-->
-      <el-card class="work-form-DealProject-card" v-show="DealProjectNewVisible">
+      <el-card class="work-form-DealProject-card" v-show="DealProjectVisible">
         <el-tag  type="info">流程处理</el-tag>
         <el-row :gutter="20">
-          <el-col :span="4">
+          <el-col :span="6">
             <el-button type="primary" @click="submitSendingProject('help')" :disabled="DealSendingHelpBtnState">{{DealSendingHelpBtnText}}</el-button>
           </el-col>
-          <el-col :span="4">
+          <!--<el-col :span="6">
+            <el-button type="primary" @click="submitSendingProject('attachment')" :disabled="DealSendingAttachmentBtnState">{{DealSendingAttachmentBtnText}}</el-button>
+          </el-col>-->
+          <el-col :span="6">
             <el-button type="primary" @click="submitSendingProject('template')" :disabled="DealSendingTemplateBtnState">{{DealSendingTemplateBtnText}}</el-button>
           </el-col>
-          <el-col :span="4">
+          <el-col :span="6">
             <el-button type="primary" @click="submitSendingProject('pic')" :disabled="DealSendingPicBtnState">{{DealSendingPicBtnText}}</el-button>
           </el-col>
         </el-row>
@@ -450,7 +471,7 @@
       <el-card class="work-form-DealNew-card" v-show="DealProjectNewVisible">
         <el-tag  type="info">新课输出</el-tag>
         <el-row :gutter="20">
-          <el-col :span="4">下载课件(新):</el-col>
+          <el-col :span="4">下载课件:</el-col>
           <el-col :span="20">
             <el-select v-model="dealWorkFormModel" placeholder="请选择模板">
               <el-option label="不需要" value=""></el-option>
@@ -489,7 +510,7 @@
       <el-card class="work-form-DealOld-card" v-show="DealProjectOldVisible">
         <el-tag  type="info">旧课输出</el-tag>
         <el-row :gutter="20">
-          <el-col :span="4">下载课件:</el-col>
+          <el-col :span="4">旧模板:</el-col>
           <el-col :span="20">
             <el-select v-model="dealWorkFormModel" placeholder="请选择旧模板">
               <el-option label="不需要" value=""></el-option>
@@ -499,7 +520,7 @@
           </el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="4">下载课件:</el-col>
+          <el-col :span="4">2012版模板:</el-col>
           <el-col :span="20">
             <el-select v-model="dealWorkFormModel" placeholder="请选择2012模板">
               <el-option label="不需要" value=""></el-option>
@@ -561,6 +582,8 @@
 
         /*手动检索的变量*/
         videoType: "",
+        courseState:"none",
+        publishType:"none",
         isEspecialClass: "",
         className: '',
         classTeacher: '',
@@ -615,7 +638,7 @@
         showConfigBtn: false,
         showCreateWorkForm: true,
         showDealWorkForm: false,
-        DealBtnText:"下载新课",
+        DealBtnText:"下载课件",
 
         /*用于base64转中文*/
         keyStr: "",
@@ -644,6 +667,8 @@
         newWorkFormBitRate: '',
         newWorkIsWaterMark: '1',
         newWorkDeadLine: '',
+        newWorkCourseChecked:false,
+        newWorkAttachmentList:[],
 
         /*处理工单-展示工单的变量*/
         DealProjectVisible:false,
@@ -686,7 +711,7 @@
       this.userType = localStorage.getItem('myusertype');
       this.userName = localStorage.getItem('myusername');
 
-      //通过链接登录 暂时以?mode为依据
+      //通过链接登录 暂时以有mode为依据
       //  http://localhost:8080/#/HomePage?login=Z3dxX2d3cUAyMDE4&mode=dispatch&project=A-20180524-1
       if (this.getRequest()["mode"]) {
         var Request = new Object();
@@ -715,7 +740,7 @@
               localStorage.setItem('myuserpass',modePassword);
               that.myToken = response.data.token;
               that.userName = modeUserName;
-              //that.$http.get('http://pms.cei.cn/InterFace/custom.ashx?method=get&id=A-20180524-1').then(function (res) {
+              //that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id=A-20180524-1').then(function (res) {
               //}).catch(function (err) {
               //  console.log(err);
               //})
@@ -731,28 +756,35 @@
             console.log('login', response);
             localStorage.setItem('myusertype', response.data.group);
             that.userType = response.data.group;
-
+            //角色
+            if (that.userType == 'manager')
+            {
+              that.showCreateWorkForm = true;
+              that.showDealWorkForm = true;
+              that.DealProjectNewVisible=true;
+              that.DealProjectOldVisible=true;
+            }
             if (that.userType == 'seller' || that.userType == 'SeniorSeller') {
               that.showCreateWorkForm = true;
+              that.showDealWorkForm = false;
             }
             if (that.userType == 'SeniorWorker') {
               that.showDealWorkForm = true;
-
-              if(projectId){
+              that.showCreateWorkForm =false;
+              that.DealProjectNewVisible=true;
+              that.DealProjectOldVisible=true;
+              if(that.mode="disposal" && projectId){
+                that.dialogDealWorkFormVisible = true;
                 that.DealBtnText="处理工单";
                 that.DealWorkFormTitle='处理工单';
                 that.DealProjectVisible=true;
-                that.DealProjectNewVisible=true;
-                that.DealProjectOldVisible=true;
-                that.$http.get('http://pms.cei.cn/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
-                  console.log('ressss------------', res);
-
+                that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
                   var workFormInfo = res.data;
-
                   that.showFormWorkCreator = workFormInfo.user;
                   that.showFormWorkId = workFormInfo.id;
                   that.showFormWorkUserInfo = workFormInfo.custom;
                   //操作状态
+                  //
                   if (workFormInfo.HelpSendingDate == "")
                   {
                     that.DealSendingHelpBtnState=false;
@@ -764,17 +796,19 @@
                   {
                     that.DealSendingHelpBtnText="辅助制作已完成";
                   }
+                  //
                   if (workFormInfo.TemplateSendingDate == "")
                   {
                     that.DealSendingTemplateBtnState=false;
+                  }
+                  else{
+                    that.DealSendingTemplateBtnText="模板正在制作";
                   }
                   if (workFormInfo.TemplateFinishDate != "")
                   {
                     that.DealSendingTemplateBtnText="模板制作已完成";
                   }
-                  else{
-                    that.DealSendingTemplateBtnText="模板正在制作";
-                  }
+                  //
                   if (workFormInfo.PicSendingDate == "")
                   {
                     that.DealSendingPicBtnState=false;
@@ -790,7 +824,7 @@
                   {
                     that.DealProjectBtnText="工单已完成";
                   }
-                  if (workFormInfo.FinishDate != "" && (workFormInfo.HelpSendingDate=="" || workFormInfo.HelperFinishDate != "")
+                  if (workFormInfo.FinishDate == "" && (workFormInfo.HelpSendingDate=="" || workFormInfo.HelperFinishDate != "")
                     && (workFormInfo.TemplateSendingDate=="" || workFormInfo.TemplateFinishDate != "")  && (workFormInfo.PicSendingDate=="" || workFormInfo.PicFinishDate != ""))
                   {
                     that.DealProjectBtnState=false;
@@ -798,13 +832,19 @@
                   //任务要求
                   if (workFormInfo.require.template != "")
                   {
-                    var ThisTemplate = that.videoModelForChoose.filter((t) => { return t.id === workFormInfo.require.template; });
-                    that.showFormWorkRequire +=  "模板：" + ThisTemplate[0].name + " ; ";
+                    if (workFormInfo.require.template == 0)
+                    {
+                      that.showFormWorkRequire +=  "模板：未指定\n\r";
+                    }
+                    else{
+                      var ThisTemplate = that.videoModelForChoose.filter((t) => { return t.id === workFormInfo.require.template; });
+                      that.showFormWorkRequire +=  "模板：" + ThisTemplate[0].name + "\n\r";
+                    }
                   }
                   else {
-                    that.showFormWorkRequire +=  "模板：未指定 ; ";
+                    that.showFormWorkRequire +=  "不需要下载课件\n\r";
                   }
-                  workFormInfo.require.DisplaySize === "" ? that.showFormWorkRequire+="输出分辨率：未指定\n\r" : that.showFormWorkRequire += "输出分辨率：" + workFormInfo.require.DisplaySize + "\n\r";
+                  workFormInfo.require.DisplaySize === "" ? that.showFormWorkRequire+="输出分辨率：未指定 ; " : that.showFormWorkRequire += "输出分辨率：" + workFormInfo.require.DisplaySize + " ; ";
                   workFormInfo.require.BitRate === "" ? that.showFormWorkRequire+="码率：未指定 ; " : that.showFormWorkRequire += "码率：" + workFormInfo.require.BitRate + "K ; ";
                   workFormInfo.require.IsWaterMark === "1" ? that.showFormWorkRequire +=  "水印：是\n\r" : that.showFormWorkRequire += "水印：否\n\r";
                   workFormInfo.require.IsPic === "1" ? that.showFormWorkRequire += "做图：是 ; 要求：" + workFormInfo.require.PicNote + "\n\r" : that.showFormWorkRequire += "做图：否\n\r";
@@ -816,7 +856,7 @@
                   that.showFormWorkCheckDate = workFormInfo.CheckDate;
                   that.showFormWorkCheckNote = workFormInfo.CheckNote;
                   that.showFormWorkAllCourseData = workFormInfo.CourseData;
-
+                  //List Data
                   workFormInfo.CourseData.forEach(function (item) {
                     if (item.DataType == '新课件') {
                       that.tableDataNew.push(item);
@@ -831,15 +871,29 @@
               else{
                 that.DealBtnText="下载新课";
               }
-
-
-
             }
             if (that.userType == 'editor' || that.userType == 'manager' || that.userType == 'SeniorEditor') {
               that.showBtns = true;
             }
             if (that.userType == 'SeniorWorker' || that.userType == 'manager' || that.userType == 'SeniorEditor') {
               that.showConfigBtn = true;
+            }
+            //mode
+            if(that.mode="browse" && projectId){
+              console.log("hit");
+              that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
+                var workFormInfo = res.data;
+                //List Data
+                workFormInfo.CourseData.forEach(function (item) {
+                  if (item.DataType == '新课件') {
+                    that.tableDataNew.push(item);
+                  } else {
+                    that.tableDataOld.push(item);
+                  }
+                });
+              }).catch(function (err) {
+                console.log(err);
+              });
             }
           })
           .catch(function (error) {
@@ -1020,13 +1074,13 @@
           "?title=" + encodeURIComponent(this.className) + "&lecturer=" + encodeURIComponent(this.classTeacher)
           + "&key=" + encodeURIComponent(this.classKeyword) + "&type=" + encodeURIComponent(this.videoType)
           + "&source=" + encodeURIComponent(this.isEspecialClass) + "&start="+encodeURIComponent(this.classDate[0].Format("yyyy-MM-dd HH:mm:ss"))
-          + "&end="+encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss"));
+          + "&end="+encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet="+encodeURIComponent(this.publishType);
         // console.log(urlNew);
         var urlOld = "http://newpms.cei.cn/OldCourseQuery/" +
           "?title=" + encodeURIComponent(this.className) + "&lecturer=" + encodeURIComponent(this.classTeacher) +
           "&key=" + encodeURIComponent(this.classKeyword) + "&type=" + encodeURIComponent(this.videoType)
           + "&source=" + encodeURIComponent(this.isEspecialClass) + "&start="+encodeURIComponent(this.classDate[0].Format("yyyy-MM-dd HH:mm:ss"))
-          + "&end="+encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss"));
+          + "&end="+encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet="+encodeURIComponent(this.publishType);
         this.$http.get(urlNew, {headers: {'Authorization': 'JWT ' + that.myToken}})
           .then(function (response) {
             if (response.status == 200) {
@@ -1235,7 +1289,7 @@
         // console.log(that.allTableChosenId);
         this.allTableData.forEach(function (item) {
           if (that.allTableChosenId.indexOf(item.CourseId) < 0) {
-            that.allTableChosen.push(item);
+            //that.allTableChosen.push(item);
             that.allTableChosenId.push(item.CourseId)
           }
 
@@ -1340,6 +1394,9 @@
 
         /* generate workbook object from table */
         //var wb = XLSX.utils.table_to_book(document.querySelector('#all_chosen_class_table'));
+        this.allTableChosen=[]
+        this.allTableChosen=this.allTableChosen.concat(this.tableDataNew)
+        this.allTableChosen=this.allTableChosen.concat(this.tableDataOld)
         var ws = XLSX.utils.json_to_sheet(this.allTableChosen);
         var wb = new XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
@@ -1376,10 +1433,8 @@
       excelSearchAndShowOnPage(mySheet) {
         console.log(mySheet);
         var sheetSize = Object.getOwnPropertyNames(mySheet).length / 2 - 1;
-
         var idArray = [];
         for (var i = 2; i <= sheetSize; i++) {
-
           if (idArray.indexOf(mySheet['A' + i]['v']) < 0) {
             var mySheetItem = {
               id: mySheet['A' + i]['v'],
@@ -1398,29 +1453,17 @@
           }
           idArray.push(mySheet['A' + i]['v']);
         }
-
-
         this.allTableData = [];
         this.currentShowTableData = [];
-
-
         var that = this;
-
         var searchType = this.excelSearchType == 'A' ? 'id' : 'title';
-
         var myProgress = 0;
         var allProgree = this.myExcel.length * 2;
-
         for (var i = 0; i <= this.myExcel.length; i++) {
-
-
           var urlexcelNew = "http://newpms.cei.cn/course/FieldQueryExacted/" +
             "?field=" + searchType + "&val=" + this.myExcel[i][searchType];
-
           var urlexcelOld = "http://newpms.cei.cn/OldCourseQueryExacted/" +
             "?field=" + searchType + "&val=" + this.myExcel[i][searchType];
-
-
           (function () {
             var index = i;
             var hasSearchResult = 0;
@@ -1461,7 +1504,6 @@
                   });
                   that.reShowTable();
                 }
-
                 var mySheetStatus = hasSearchResult > 0 ? 0 : 1;
                 that.myExcel[index].status = mySheetStatus;
                 //展示“查看错误检索”按钮
@@ -1625,8 +1667,16 @@
         // console.log(this.username);
         // console.log(this.allTableChosen);
 
-        var myNewWorkFormUrl = 'http://pms.cei.cn/InterFace/custom.ashx?method=insert';
+        var myNewWorkFormUrl = 'http://pms.cei.com.cn/InterFace/custom.ashx?method=insert';
         console.log(this.userName);
+        var newWorkCourseTemplate ="";
+        if (!that.newWorkCourseChecked)
+        {
+          newWorkCourseTemplate="";
+        }
+        else {
+          newWorkCourseTemplate=that.newWorkIsTemplate;
+        }
         this.$axios({
           method: 'post',
           url: myNewWorkFormUrl,
@@ -1637,14 +1687,17 @@
             "DeadLine":this.newWorkDeadLine,
             "note": that.newWorkFormNote,
             "require": {
-              "template": that.newWorkFormModel,
+              "template": newWorkCourseTemplate,
               "DisplaySize": that.newWorkFormRatio,
               "BitRate":that.newWorkFormBitRate,
               "IsWaterMark":that.newWorkIsWaterMark,
               "IsPic":that.newWorkIsPic,
               "PicNote":that.newWorkPicNote,
               "IsTemplate":that.newWorkIsTemplate,
-              "TemplateNote":that.newWorkTemplateNote
+              "TemplateNote":that.newWorkTemplateNote,
+              //"AttText":IsInArray(that.newWorkAttachmentList,'text'),
+              //"AttPPT":IsInArray(that.newWorkAttachmentList,'ppt'),
+              //"AttTest":IsInArray(that.newWorkAttachmentList,'test'),
             },
             "CourseData": that.allTableChosen
           },
@@ -1670,7 +1723,7 @@
         /*
         * 新建工单
         * 不需要token
-        * post http://pms.cei.cn/InterFace/custom.ashx?method=insert
+        * post http://pms.cei.com.cn/InterFace/custom.ashx?method=insert
         * {
         * "id":"网页上填的id",
         * "custom":"网页上填的用户信息",
@@ -1738,7 +1791,7 @@
       submitDealProject(){
         var that = this;
         if (that.showFormWorkId) {
-          var myDealWorkFormUrl = 'http://pms.cei.cn/InterFace/custom.ashx?method=UpdateProgress';
+          var myDealWorkFormUrl = 'http://pms.cei.com.cn/InterFace/custom.ashx?method=UpdateProgress';
           this.$axios({
             method: 'post',
             url: myDealWorkFormUrl,
@@ -1751,7 +1804,7 @@
             withCredentials: false
           }).then(function (res) {
             // console.log(res);
-            if (res.status == 201) {
+            if (res.status == 200) {
               that.$message({
                 type: 'success',
                 message: '处理工单成功！'
@@ -1772,7 +1825,7 @@
       },
       submitSendingProject(type) {
         var that = this;
-        var myDealWorkFormUrl = 'http://pms.cei.cn/InterFace/custom.ashx?method=UpdateSending';
+        var myDealWorkFormUrl = 'http://pms.cei.com.cn/InterFace/custom.ashx?method=UpdateSending';
         this.$axios({
           method: 'post',
           url: myDealWorkFormUrl,
@@ -1783,7 +1836,7 @@
           withCredentials: false
         }).then(function (res) {
           // console.log(res);
-          if (res.status == 201) {
+          if (res.status == 200) {
             that.$message({
               type: 'success',
               message: '处理成功！'
@@ -1814,10 +1867,19 @@
         }).catch(function (err) {
           console.log(err);
         })
+      },
+      handleRatioCommand(val) {
+        var BitRatio;
+        if(val=="352*288"){ BitRatio="180"; }
+        else if(val=="640*360"){ BitRatio="300"; }
+        else if(val=="720*576"){ BitRatio="500"; }
+        else if(val=="1280*720"){ BitRatio="2000"; }
+        else{ BitRatio=""; }
+        this.newWorkFormBitRate=BitRatio;
+        //console.log(this.newWorkAttachmentList);
       }
     }
   }
-
   //Date Format OP
   Date.prototype.Format = function (fmt) { //author: meizz
     var o = {
@@ -1835,6 +1897,13 @@
     return fmt;
   }
   //Date Format ED
+
+  //
+  function IsInArray(arr,val){
+    var testStr=','+arr.join(",")+",";
+    return testStr.indexOf(","+val+",")!=-1;
+  }
+  //
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -1899,7 +1968,7 @@
       width: 40%;
     }
 
-    .el-input, .el-button, .el-select {
+    .el-input, .el-button, .el-select, .el-date-picker {
       margin-top: 20px;
       margin-left: 20px;
     }

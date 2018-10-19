@@ -9,7 +9,7 @@
       text-color="#fff"
       active-text-color="#ffd04b">
       <el-menu-item index="1">课程</el-menu-item>
-      <el-menu-item index="2">任务</el-menu-item>
+      <el-menu-item index="2">制作队列</el-menu-item>
 
       <!--<el-menu-item index="3">课程列表2</el-menu-item>-->
 
