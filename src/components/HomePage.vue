@@ -189,12 +189,11 @@
               </template>
             </el-table-column>
           </el-table>
-
-
         </div>
         <div class="new-class-result">
           <div class="search-table-head">
             <span>新课列表</span>
+            <el-tag style="margin-left: 10px">合计: {{ tableDataNew.length }}</el-tag>
             <div>
               <el-button type="primary" plain @click="exportNewExcel">导出列表</el-button>
               <el-button type="primary" plain @click="tableDataNew = []">全部删除</el-button>
@@ -223,6 +222,7 @@
         <div class="old-class-result">
           <div class="search-table-head">
             <span>旧课列表</span>
+            <el-tag style="margin-left: 10px">合计: {{ tableDataOld.length }}</el-tag>
             <div>
               <el-button type="primary" plain @click="exportOldExcel()">导出列表</el-button>
               <el-button type="primary" plain @click="tableDataOld = []">全部删除</el-button>
@@ -250,7 +250,7 @@
       </el-card>
     </div>
 
-    <el-dialog title="检索结果" :visible.sync="dialogTableVisible" class="myExcelResult">
+    <el-dialog title="批量检索结果" :visible.sync="dialogTableVisible" class="myExcelResult">
       <h4>检索进度：</h4>
       <el-progress :text-inside="true" :stroke-width="18" :percentage="searchProgress"></el-progress>
       <h4>重复的检索课程：</h4>
@@ -258,10 +258,29 @@
         <el-table-column property="id" label="ID"></el-table-column>
         <el-table-column property="title" label="标题"></el-table-column>
       </el-table>
-      <h4 class="search-fail">检索失败的课程：</h4>
+      <h4 class="search-fail">检索无结果：</h4>
       <el-table :data="myExcelFault">
         <el-table-column property="id" label="ID"></el-table-column>
         <el-table-column property="title" label="标题"></el-table-column>
+      </el-table>
+      <h4 class="search-fail">多重结果：</h4>
+      <el-button type="primary" size="mini" @click="addMultipleSelected">添加所选</el-button>
+      <el-table :data="myExcelMultiple"
+                @selection-change="handleMultipleSelectionChange">
+        <el-table-column type="selection" width="30" sortable>
+        </el-table-column>
+        <el-table-column label="" width="30">
+          <template slot-scope="scope">
+            <div v-show="(scope.row.DataType=='旧课件'?true:false)"
+                 style="background-color: #63a35c;color: #fff;width: 20px;text-align: center;font-size: 12px;">
+              旧
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column property="CreateDate" label="创建时间"></el-table-column>
+        <el-table-column property="title" label="标题"></el-table-column>
+        <el-table-column property="GroupName" label="专题"></el-table-column>
+        <el-table-column property="TempletType" label="类型"></el-table-column>
       </el-table>
     </el-dialog>
     <!--新建工单对话框-->
@@ -284,18 +303,43 @@
       </el-row>
       <el-row :gutter="20">
         <el-col :span="3">用户信息:</el-col>
-        <el-col :span="20">
-          <el-input type="text" v-model="newWorkFormUserInfo"></el-input>
+        <el-col :span="14">
+          <el-select v-model="newWorkCustomerId" filterable placeholder="选择客户(可输入搜索)">
+            <el-option v-for="item in CustomerList" :label="item.name" :value="item.id"
+                       :key="item.id"></el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="4">
+          <el-button type="primary" size="mini" @click="ShowAddCustomer=true">新建客户</el-button>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" v-show="ShowAddCustomer">
+        <el-col :span="3">新建客户:</el-col>
+        <el-col :span="8">
+          <el-input type="text" v-model="AddCustomerName" placeholder="输入客户名称"></el-input>
+        </el-col>
+        <el-col :span="4">
+        <el-select v-model="AddCustomerType" placeholder="请选择分类">
+          <el-option label="国家部委" value="国家部委"></el-option>
+          <el-option label="财税系统" value="财税系统"></el-option>
+          <el-option label="组织系统" value="组织系统"></el-option>
+          <el-option label="人社系统" value="人社系统"></el-option>
+          <el-option label="学校系统" value="学校系统"></el-option>
+          <el-option label="企业系统" value="企业系统"></el-option>
+        </el-select>
+        </el-col>
+        <el-col :span="4">
+          <el-button type="primary" size="mini" @click="submitAddCustomer" :disabled="AddCustomerBtnState">{{ AddCustomerBtnText }}</el-button>
         </el-col>
       </el-row>
       <el-row :gutter="20">
         <el-col :span="3">下载课件:</el-col>
         <el-col :span="20">
           <el-checkbox v-model="newWorkCourseChecked">需要</el-checkbox>
-          <el-select v-model="newWorkFormModel" v-show="newWorkCourseChecked" placeholder="请选择模板">
+          <el-select v-model="newWorkFormModel" v-show="newWorkCourseChecked" filterable placeholder="请选择模板">
             <!--<el-option label="无" value=""></el-option>-->
-            <el-option v-for="(item,index) in videoModelForChoose" :label="item.name" :value="item.id"
-                       :key="index"></el-option>
+            <el-option v-for="item in videoModelForChoose" :label="item.name" :value="item.id"
+                       :key="item.id"></el-option>
           </el-select>
         </el-col>
       </el-row>
@@ -402,7 +446,7 @@
         <el-row :gutter="20">
           <el-col :span="4">用户信息:</el-col>
           <el-col :span="20">
-            {{showFormWorkUserInfo}}
+            {{showFormWorkCustomerName}}
           </el-col>
         </el-row>
         <el-row :gutter="20">
@@ -473,10 +517,10 @@
         <el-row :gutter="20">
           <el-col :span="4">下载课件:</el-col>
           <el-col :span="20">
-            <el-select v-model="dealWorkFormModel" placeholder="请选择模板">
+            <el-select v-model="dealWorkFormModel" filterable placeholder="请选择模板">
               <el-option label="不需要" value=""></el-option>
-              <el-option v-for="(item,index) in videoModelForChoose" :label="item.name" :value="item.id"
-                         :key="index"></el-option>
+              <el-option v-for="item in videoModelForChoose" :label="item.name" :value="item.id"
+                         :key="item.id"></el-option>
             </el-select>
           </el-col>
         </el-row>
@@ -500,6 +544,16 @@
           </el-col>
         </el-row>
         <el-row :gutter="20">
+          <el-col :span="4">单独输出素材:</el-col>
+          <el-col :span="20">
+            <el-checkbox-group v-model="dealWorkAttachmentList">
+              <el-checkbox label="text">全文(TXT格式)</el-checkbox>
+              <el-checkbox label="ppt">PPT</el-checkbox>
+              <el-checkbox label="test">考题</el-checkbox>
+            </el-checkbox-group>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
           <el-col :span="20">&nbsp;</el-col>
           <el-col :span="4">
             <el-button type="primary" @click="submitDealNew" :disabled="DealNewBtnState">{{DealNewBtnText}}</el-button>
@@ -512,9 +566,9 @@
         <el-row :gutter="20">
           <el-col :span="4">旧模板:</el-col>
           <el-col :span="20">
-            <el-select v-model="dealWorkFormModel" placeholder="请选择旧模板">
+            <el-select v-model="oldTemplateVal" filterable placeholder="请选择旧模板">
               <el-option label="不需要" value=""></el-option>
-              <el-option v-for="(item,index) in videoModelForChoose" :label="item.name" :value="item.id"
+              <el-option v-for="(item,index) in oldTemplate" :label="item" :value="item"
                          :key="index"></el-option>
             </el-select>
           </el-col>
@@ -522,9 +576,9 @@
         <el-row :gutter="20">
           <el-col :span="4">2012版模板:</el-col>
           <el-col :span="20">
-            <el-select v-model="dealWorkFormModel" placeholder="请选择2012模板">
+            <el-select v-model="oldTemplate2012Val" filterable placeholder="请选择2012模板">
               <el-option label="不需要" value=""></el-option>
-              <el-option v-for="(item,index) in videoModelForChoose" :label="item.name" :value="item.id"
+              <el-option v-for="(item,index) in oldTemplate2012" :label="item" :value="item"
                          :key="index"></el-option>
             </el-select>
           </el-col>
@@ -532,14 +586,24 @@
         <el-row :gutter="20">
           <el-col :span="4">是否改名:</el-col>
           <el-col :span="20">
-            <el-radio v-model="dealWorkFormRename" label="1">是</el-radio>
-            <el-radio v-model="dealWorkFormRename" label="0">否</el-radio>
+            <el-radio v-model="dealOldWorkFormRename" label="1">是</el-radio>
+            <el-radio v-model="dealOldWorkFormRename" label="0">否</el-radio>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="4">单独输出素材:</el-col>
+          <el-col :span="20">
+            <el-checkbox-group v-model="dealOldWorkAttachmentList">
+              <el-checkbox label="text">全文(TXT格式)</el-checkbox>
+              <el-checkbox label="ppt">PPT</el-checkbox>
+              <el-checkbox label="test">考题</el-checkbox>
+            </el-checkbox-group>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="20">&nbsp;</el-col>
           <el-col :span="4">
-            <el-button type="primary" @click="">确定下载</el-button>
+            <el-button type="primary" @click="submitDealOld" :disabled="DealOldBtnState">{{DealOldBtnText}}</el-button>
           </el-col>
         </el-row>
       </el-card>
@@ -569,8 +633,9 @@
         userState: '',
         userType: '',
         myToken: '',
+        userArea:'n',
 
-        /*excel检索的变量*/
+        /*Excel检索的变量*/
         fileList: [],
         excelSearchType: 'A',
         searchProgress: 0,
@@ -579,6 +644,8 @@
         myExcel: [],
         myExcelRepeat: [],
         myExcelFault: [],
+        myExcelMultiple: [],
+        MultipleResultTableSelection: [],
 
         /*手动检索的变量*/
         videoType: "",
@@ -656,7 +723,6 @@
         newWorkFormNowDate: '',
         newWorkFormId2: '',
         newWorkFormId: '',
-        newWorkFormUserInfo: '',
         newWorkFormModel: '',
         newWorkFormRatio: '',
         newWorkFormNote: '',
@@ -669,11 +735,21 @@
         newWorkDeadLine: '',
         newWorkCourseChecked:false,
         newWorkAttachmentList:[],
+        CustomerList:[],
+        newWorkCustomerId: '',
+        /*新建工单-新建用户*/
+        ShowAddCustomer:false,
+        AddCustomerName:'',
+        AddCustomerType:'',
+        AddCustomerBtnState:false,
+        AddCustomerBtnText:'提交',
 
         /*处理工单-展示工单的变量*/
         DealProjectVisible:false,
         DealNewBtnState:false,
         DealNewBtnText:'确定下载',
+        DealOldBtnState:false,
+        DealOldBtnText:'确定下载',
         DealProjectBtnState:true,
         DealProjectBtnText:'工单完成',
         DealSendingHelpBtnState:true,
@@ -687,19 +763,27 @@
         DealWorkFormTitle:'查看工单',
         showFormWorkCreator: '',
         showFormWorkId: '',
-        showFormWorkUserInfo: '',
+        showFormWorkCustomerName: '',
+        showFormWorkCustomerId:'',
         showFormWorkDeadLine:'',
         showFormWorkRequire:'',
         showFormWorkNote: '',
         showFormWorkCheckDate: '',
         showFormWorkCheckNote: '',
         showFormWorkAllCourseData: '',
+        oldTemplate2012:[],
+        oldTemplate2012Val:'',
 
         /*处理工单-信息填写的变量*/
         dealWorkFormModel: '',
         dealWorkFormRatio: '',
         dealWorkFormNote: '',
         dealWorkFormRename: '1',
+        dealWorkAttachmentList:[],
+        dealOldWorkFormRename:'1',
+        dealOldWorkAttachmentList:[],
+        oldTemplate:[],
+        oldTemplateVal:'',
 
         /*从后台获取的供选择的模板信息*/
         videoModelForChoose: [],
@@ -710,7 +794,6 @@
       //this.myToken = localStorage.getItem('mytoken');
       this.userType = localStorage.getItem('myusertype');
       this.userName = localStorage.getItem('myusername');
-
       //通过链接登录 暂时以有mode为依据
       //  http://localhost:8080/#/HomePage?login=Z3dxX2d3cUAyMDE4&mode=dispatch&project=A-20180524-1
       if (this.getRequest()["mode"]) {
@@ -718,8 +801,7 @@
         var Request2 = new Object();
         Request = this.getRequest();
         Request2 = this.getRequest2();
-        console.log(Request2);
-        console.log(Request["mode"]);
+        var mode =Request["mode"]
         this.keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         this.userState = Request2["mode"];
         var modeLogin = this.decode(Request["login"]);
@@ -757,23 +839,34 @@
             localStorage.setItem('myusertype', response.data.group);
             that.userType = response.data.group;
             //角色
-            if (that.userType == 'manager')
+            if (that.userType.search('manager;') != -1 )
             {
               that.showCreateWorkForm = true;
               that.showDealWorkForm = true;
               that.DealProjectNewVisible=true;
               that.DealProjectOldVisible=true;
             }
-            if (that.userType == 'seller' || that.userType == 'SeniorSeller') {
-              that.showCreateWorkForm = true;
-              that.showDealWorkForm = false;
-            }
-            if (that.userType == 'SeniorWorker') {
+            if (that.userType.search('SeniorWorker;') != -1 ) {
               that.showDealWorkForm = true;
               that.showCreateWorkForm =false;
               that.DealProjectNewVisible=true;
               that.DealProjectOldVisible=true;
-              if(that.mode="disposal" && projectId){
+              //
+              that.$http.get('http://lms.cei.cn/lms/myproducer/templates2/index.txt',{withCredentials:false}).then(function (res) {
+                // console.log(res);
+                that.oldTemplate = res.data.split("\r\n");
+                //console.log(res.data.replace(new RegExp(/(\r\n)/g),'_'))
+              }).catch(function (err) {
+                console.log(err)
+              })
+              that.$http.get('http://lms.cei.cn/lms/myproducer/templates2013/index.txt',{withCredentials:false}).then(function (res) {
+                // console.log(res);
+                that.oldTemplate2012 = res.data.split("\r\n");
+              }).catch(function (err) {
+                console.log(err)
+              })
+              //
+              if(mode==="disposal" && projectId){
                 that.dialogDealWorkFormVisible = true;
                 that.DealBtnText="处理工单";
                 that.DealWorkFormTitle='处理工单';
@@ -782,7 +875,8 @@
                   var workFormInfo = res.data;
                   that.showFormWorkCreator = workFormInfo.user;
                   that.showFormWorkId = workFormInfo.id;
-                  that.showFormWorkUserInfo = workFormInfo.custom;
+                  that.showFormWorkCustomerName = workFormInfo.custom
+                  that.showFormWorkCustomerId=workFormInfo.CustomerId
                   //操作状态
                   //
                   if (workFormInfo.HelpSendingDate == "")
@@ -837,7 +931,7 @@
                       that.showFormWorkRequire +=  "模板：未指定\n\r";
                     }
                     else{
-                      var ThisTemplate = that.videoModelForChoose.filter((t) => { return t.id === workFormInfo.require.template; });
+                      var ThisTemplate = that.videoModelForChoose.filter((t) => { return t.id == workFormInfo.require.template; });
                       that.showFormWorkRequire +=  "模板：" + ThisTemplate[0].name + "\n\r";
                     }
                   }
@@ -852,10 +946,11 @@
                     //that.showFormWorkModal = workFormInfo.require.template;
                   //that.showFormWorkRatio = workFormInfo.require.DisplaySize;
                   //
-                  that.showFormWorkNote = workFormInfo.note;
-                  that.showFormWorkCheckDate = workFormInfo.CheckDate;
-                  that.showFormWorkCheckNote = workFormInfo.CheckNote;
-                  that.showFormWorkAllCourseData = workFormInfo.CourseData;
+                  that.showFormWorkDeadLine =  workFormInfo.DeadLine
+                  that.showFormWorkNote = workFormInfo.note
+                  that.showFormWorkCheckDate = workFormInfo.CheckDate
+                  that.showFormWorkCheckNote = workFormInfo.CheckNote
+                  that.showFormWorkAllCourseData = workFormInfo.CourseData
                   //List Data
                   workFormInfo.CourseData.forEach(function (item) {
                     if (item.DataType == '新课件') {
@@ -872,14 +967,8 @@
                 that.DealBtnText="下载新课";
               }
             }
-            if (that.userType == 'editor' || that.userType == 'manager' || that.userType == 'SeniorEditor') {
-              that.showBtns = true;
-            }
-            if (that.userType == 'SeniorWorker' || that.userType == 'manager' || that.userType == 'SeniorEditor') {
-              that.showConfigBtn = true;
-            }
             //mode
-            if(that.mode="browse" && projectId){
+            if(mode==="browse" && projectId){
               console.log("hit");
               that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
                 var workFormInfo = res.data;
@@ -904,20 +993,40 @@
         this.myToken = localStorage.getItem('mytoken');
       }
 
-
-
-
-      if (this.userType == 'seller' || this.userType == 'SeniorSeller') {
+      //所有方式登录
+      if (that.userType.search('seller;') != -1 || that.userType.search('SeniorSeller;') != -1) {
         this.showCreateWorkForm = true;
+        that.showDealWorkForm = false;
+        //客户信息
+        var getCustomerUrl = 'http://newpms.cei.cn/customer/';
+        this.$http.get(getCustomerUrl).then(function (res) {
+          // console.log(res);
+          that.CustomerList = res.data.filter((t) => { return t.area == 'n' })
+          //console.log(that.CustomerList)
+        }).catch(function (err) {
+          console.log(err);
+        })
       }
-      if (this.userType == 'SeniorWorker') {
+      if (that.userType.search('SouthSeller;') != -1 ){
+        this.showCreateWorkForm = true
+        this.userArea = 's'
+        var getCustomerUrl = 'http://newpms.cei.cn/customer/'
+        this.$http.get(getCustomerUrl).then(function (res) {
+          // console.log(res);
+          that.CustomerList = res.data.filter((t) => { return t.area == 's' })
+          console.log(that.CustomerList)
+        }).catch(function (err) {
+          console.log(err);
+        })
+      }
+      if (that.userType.search('SeniorWorker;') != -1) {
         this.showDealWorkForm = true;
       }
-      if (this.userType == 'editor' || this.userType == 'manager' || this.userType == 'SeniorEditor') {
-        this.showBtns = true;
+      if (that.userType.search('editor;') != -1 || that.userType.search('manager;') != -1 || that.userType.search('SeniorEditor;') != -1 ) {
+        that.showBtns = true;
       }
-      if (this.userType == 'SeniorWorker' || this.userType == 'manager' || this.userType == 'SeniorEditor') {
-        this.showConfigBtn = true;
+      if (that.userType.search('SeniorWorker;') != -1 || that.userType.search('manager;') != -1 || that.userType.search('SeniorEditor;') != -1) {
+        that.showConfigBtn = true;
       }
 
       var nowDate = new Date();
@@ -1063,7 +1172,7 @@
       },
       // base 64 ED
 
-      //
+      //搜索栏
       selectClassWord() {
         this.loadingAll = true;
         this.currentShowTableData = [];
@@ -1074,13 +1183,13 @@
           "?title=" + encodeURIComponent(this.className) + "&lecturer=" + encodeURIComponent(this.classTeacher)
           + "&key=" + encodeURIComponent(this.classKeyword) + "&type=" + encodeURIComponent(this.videoType)
           + "&source=" + encodeURIComponent(this.isEspecialClass) + "&start="+encodeURIComponent(this.classDate[0].Format("yyyy-MM-dd HH:mm:ss"))
-          + "&end="+encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet="+encodeURIComponent(this.publishType);
+          + "&end="+encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet="+encodeURIComponent(this.publishType) + "&area=" + encodeURIComponent(this.userArea);
         // console.log(urlNew);
         var urlOld = "http://newpms.cei.cn/OldCourseQuery/" +
           "?title=" + encodeURIComponent(this.className) + "&lecturer=" + encodeURIComponent(this.classTeacher) +
           "&key=" + encodeURIComponent(this.classKeyword) + "&type=" + encodeURIComponent(this.videoType)
           + "&source=" + encodeURIComponent(this.isEspecialClass) + "&start="+encodeURIComponent(this.classDate[0].Format("yyyy-MM-dd HH:mm:ss"))
-          + "&end="+encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet="+encodeURIComponent(this.publishType);
+          + "&end="+encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet="+encodeURIComponent(this.publishType) + "&area=" + encodeURIComponent(this.userArea);
         this.$http.get(urlNew, {headers: {'Authorization': 'JWT ' + that.myToken}})
           .then(function (response) {
             if (response.status == 200) {
@@ -1112,6 +1221,9 @@
       },
       handleSelectionChange(val) {
         this.multipleSelection = val;
+      },
+      handleMultipleSelectionChange(val) {
+        this.MultipleResultTableSelection = val;
       },
       //删除检索结果中的指定课程
       handleRepeatDelete(index, row) {
@@ -1304,7 +1416,6 @@
               // });
             }
           } else if (item.DataType == '旧课件') {
-
             if (that.oldCourseIds.indexOf(item.CourseId) < 0) {
               that.tableDataOld.push(item);
               that.oldCourseIds.push(item.CourseId)
@@ -1411,6 +1522,10 @@
       },
       fileSearch() {
         this.dialogTableVisible = true;
+        this.myExcel = []
+        this.myExcelRepeat = []
+        this.myExcelFault = []
+        this.myExcelMultiple = []
         this.X = XLSX;
         var rAbs = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
 
@@ -1431,19 +1546,19 @@
         }
       },
       excelSearchAndShowOnPage(mySheet) {
-        console.log(mySheet);
+        //console.log(mySheet);
         var sheetSize = Object.getOwnPropertyNames(mySheet).length / 2 - 1;
-        var idArray = [];
+        var idArray = [];//记录已添加
         for (var i = 2; i <= sheetSize; i++) {
-          if (idArray.indexOf(mySheet['A' + i]['v']) < 0) {
+          if (idArray.indexOf(mySheet[this.excelSearchType + i]['v']) < 0) // <0已添加列表中未出现，可以新增
+          {
             var mySheetItem = {
               id: mySheet['A' + i]['v'],
               title: mySheet['B' + i]['v'],
-              //0:搜索成功且唯一；1：搜索不存在；2：搜索重复；3:未知；
-              status: 3
+              status: 0  //0:搜索成功且唯一；1：搜索不存在；2：搜索重复；3:未知；
             };
             this.myExcel.push(mySheetItem);
-          } else {
+          } else { //已添加列表中出现，重复
             var mySheetItem = {
               id: mySheet['A' + i]['v'],
               title: mySheet['B' + i]['v'],
@@ -1451,7 +1566,7 @@
             };
             this.myExcelRepeat.push(mySheetItem);
           }
-          idArray.push(mySheet['A' + i]['v']);
+          idArray.push(mySheet[this.excelSearchType + i]['v']);
         }
         this.allTableData = [];
         this.currentShowTableData = [];
@@ -1459,11 +1574,14 @@
         var searchType = this.excelSearchType == 'A' ? 'id' : 'title';
         var myProgress = 0;
         var allProgree = this.myExcel.length * 2;
-        for (var i = 0; i <= this.myExcel.length; i++) {
+        //console.log(this.myExcel.length)
+        for (var i = 0; i < this.myExcel.length; i++) {
+          //console.log(i)
           var urlexcelNew = "http://newpms.cei.cn/course/FieldQueryExacted/" +
             "?field=" + searchType + "&val=" + this.myExcel[i][searchType];
           var urlexcelOld = "http://newpms.cei.cn/OldCourseQueryExacted/" +
             "?field=" + searchType + "&val=" + this.myExcel[i][searchType];
+          //新课检索
           (function () {
             var index = i;
             var hasSearchResult = 0;
@@ -1471,7 +1589,7 @@
               .then(function (response) {
                 myProgress++;
                 that.searchProgress = parseInt(myProgress / allProgree * 100);
-                if (response.data.length > 0) {
+                if (response.data.length == 1) {
                   hasSearchResult++;
                   response.data.forEach(function (item) {
                     item.DataType = "新课件";
@@ -1479,7 +1597,11 @@
                   });
                   that.reShowTable();
                 }
-
+                else if (response.data.length > 1){
+                  response.data.forEach(function (item) {
+                    that.myExcelMultiple.push(item);
+                  });
+                }
                 var mySheetStatus = hasSearchResult > 0 ? 0 : 1;
                 that.myExcel[index].status = mySheetStatus;
                 //展示“查看错误检索”按钮
@@ -1497,12 +1619,17 @@
               .then(function (response) {
                 myProgress++;
                 that.searchProgress = parseInt(myProgress / allProgree * 100);
-                if (response.data.length > 0) {
+                if (response.data.length == 1) {
                   hasSearchResult++;
                   response.data.forEach(function (item) {
                     that.allTableData.push(item);
                   });
                   that.reShowTable();
+                }
+                else if (response.data.length > 1){
+                  response.data.forEach(function (item) {
+                    that.myExcelMultiple.push(item);
+                  });
                 }
                 var mySheetStatus = hasSearchResult > 0 ? 0 : 1;
                 that.myExcel[index].status = mySheetStatus;
@@ -1528,6 +1655,39 @@
         }
 
       },
+      //添加多结果选课到新课旧课列表
+      addMultipleSelected() {
+        var that = this;
+        this.MultipleResultTableSelection.forEach(function (item) {
+          if (that.allTableChosenId.indexOf(item.CourseId) < 0) {
+            that.allTableChosen.push(item);
+            that.allTableChosenId.push(item.CourseId)
+          }
+
+          if (item.DataType == '新课件') {
+            if (that.newCourseIds.indexOf(item.CourseId) < 0) {
+              that.tableDataNew.push(item);
+              that.newCourseIds.push(item.CourseId);
+            } else {
+              // that.$message({
+              //   message: '该选项已存在！',
+              //   type: 'warning'
+              // });
+            }
+          } else if (item.DataType == '旧课件') {
+
+            if (that.oldCourseIds.indexOf(item.CourseId) < 0) {
+              that.tableDataOld.push(item);
+              that.oldCourseIds.push(item.CourseId)
+            } else {
+              // that.$message({
+              //   message: '该选项已存在！',
+              //   type: 'warning'
+              // });
+            }
+          }
+        });
+      },
       showFalseInfo() {
         this.dialogTableVisible = true;
       },
@@ -1544,7 +1704,7 @@
           }
         }
         else if (row.DataType == '旧课件') {
-          window.open('http://203.207.118.110/doc/' + row.CourseId + '/');
+          window.open('http://lms.cei.cn/doc/' + row.CourseId + '/');
         }
       },
 
@@ -1668,7 +1828,6 @@
         // console.log(this.allTableChosen);
 
         var myNewWorkFormUrl = 'http://pms.cei.com.cn/InterFace/custom.ashx?method=insert';
-        console.log(this.userName);
         var newWorkCourseTemplate ="";
         if (!that.newWorkCourseChecked)
         {
@@ -1682,7 +1841,8 @@
           url: myNewWorkFormUrl,
           data: {
             "id": that.newWorkFormId,
-            "custom": that.newWorkFormUserInfo,
+            "custom":  that.CustomerList.filter((t) => { return t.id == that.newWorkCustomerId })[0].name,
+            "CustomerId":that.newWorkCustomerId,
             "user": this.userName,
             "DeadLine":this.newWorkDeadLine,
             "note": that.newWorkFormNote,
@@ -1695,11 +1855,11 @@
               "PicNote":that.newWorkPicNote,
               "IsTemplate":that.newWorkIsTemplate,
               "TemplateNote":that.newWorkTemplateNote,
-              //"AttText":IsInArray(that.newWorkAttachmentList,'text'),
-              //"AttPPT":IsInArray(that.newWorkAttachmentList,'ppt'),
-              //"AttTest":IsInArray(that.newWorkAttachmentList,'test'),
+              "AttText":IsInArray(that.newWorkAttachmentList,'text').toString(),
+              "AttPPT":IsInArray(that.newWorkAttachmentList,'ppt').toString(),
+              "AttTest":IsInArray(that.newWorkAttachmentList,'test').toString(),
             },
-            "CourseData": that.allTableChosen
+            "CourseData": that.tableDataNew.concat(that.tableDataOld)
           },
           withCredentials:false
         }).then(function (res) {
@@ -1742,12 +1902,14 @@
             showFormWorkAllCourseDataIds.push(item.CourseId);
           }
         });
-
         var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
         var extendedData = {
           "template": that.dealWorkFormModel,
           "DisplaySize": that.dealWorkFormRatio,
-          "rename": that.dealWorkFormRename
+          "rename": that.dealWorkFormRename,
+          "AttText":IsInArray(that.dealWorkAttachmentList,'text'),
+          "AttPPT":IsInArray(that.dealWorkAttachmentList,'ppt'),
+          "AttTest":IsInArray(that.dealWorkAttachmentList,'test')
         };
         extendedData = JSON.stringify(extendedData);
         var dealNote="无";
@@ -1762,7 +1924,8 @@
             "TaskType": "CourseDownload",
             "TaskNote": dealNote,
             "ExtendedData": extendedData,
-            "course": showFormWorkAllCourseDataIds
+            "course": showFormWorkAllCourseDataIds,
+            "customer":that.showFormWorkCustomerId,
           }
         }).then(function (res) {
           console.log(res);
@@ -1771,8 +1934,66 @@
               type: 'success',
               message: '任务已添加'
             });
-            that.DealNewBtnState=false;
+            that.DealNewBtnState=true;
             that.DealNewBtnText='任务已添加';
+          } else if (res.status == 204) {
+            that.$message({
+              type: 'warning',
+              message: '重复操作'
+            });
+            //that.dialogWorkFormVisible = false;
+          }
+        }).catch(function (err) {
+          that.$message({
+            type: 'warning',
+            message: '错误！'
+          });
+          console.log(err);
+        });
+      },
+      submitDealOld() {
+        var that = this;
+        var OldCourseIdList = [];
+        //this.showFormWorkAllCourseData.forEach(function (item) {
+        this.tableDataOld.forEach(function (item) {
+          OldCourseIdList.push({"id":item.CourseId,"title":item.title,"type":item.TempletType});
+        });
+        var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
+        var extendedData = {
+          "template": that.oldTemplateVal,
+          "template2012": that.oldTemplate2012Val,
+          //"DisplaySize": that.dealWorkFormRatio,
+          "rename": that.dealOldWorkFormRename,
+          "AttText":IsInArray(that.dealOldWorkAttachmentList,'text'),
+          "AttPPT":IsInArray(that.dealOldWorkAttachmentList,'ppt'),
+          "AttTest":IsInArray(that.dealOldWorkAttachmentList,'test'),
+          "CourseList": OldCourseIdList
+        };
+        extendedData = JSON.stringify(extendedData);
+        var dealNote="无";
+        if(that.dealOldWorkFormNote){
+          dealNote=that.dealOldWorkFormNote;
+        }
+        this.$axios({
+          method: 'post',
+          url: myDealWorkFormTokenUrl,
+          headers: {'Authorization': 'JWT ' + that.myToken},
+          data: {
+            "TaskType": "OldCourseDownload",
+            "TaskNote": dealNote,
+            "ExtendedData": extendedData,
+            "course": null,
+            "customer":that.showFormWorkCustomerId,
+          }
+        }).then(function (res) {
+          console.log(res);
+          if (res.status == 201) {
+            that.$message({
+              type: 'success',
+              message: '任务已添加'
+            });
+            that.DealOldBtnState=true;
+            that.DealOldBtnText='任务已添加';
           } else if (res.status == 204) {
             that.$message({
               type: 'warning',
@@ -1865,6 +2086,40 @@
             that.dialogWorkFormVisible = false;
           }
         }).catch(function (err) {
+          console.log(err);
+        })
+      },
+      submitAddCustomer(){
+        var that = this;
+        this.$axios({
+          method: 'post',
+          url:  'http://newpms.cei.cn/customer/',
+          headers: {'Authorization': 'JWT ' + that.myToken},
+          data: {
+            "name": that.AddCustomerName,
+            "sort":that.AddCustomerType,
+            "area":that.userArea
+          }
+        }).then(function (res) {
+          console.log(res);
+          if (res.status == 201) {
+            that.$message({
+              type: 'success',
+              message: '客户已添加'
+            });
+            that.AddCustomerBtnState = true
+            that.AddCustomerBtnText = '客户已添加'
+          } else if (res.status == 204) {
+            that.$message({
+              type: 'warning',
+              message: '已存在此客户'
+            });
+          }
+        }).catch(function (err) {
+          that.$message({
+            type: 'warning',
+            message: '错误！'
+          });
           console.log(err);
         })
       },
