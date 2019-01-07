@@ -124,7 +124,7 @@
                 <i class="iconfont" @click="PlayCourse(scope.row)">&#xe63e;</i>
               </el-tooltip>
               <el-tooltip class="item" effect="dark" content="编辑" placement="bottom-start">
-                <i class="iconfont" @click="EditCourse(scope.row)" v-show="(scope.row.DataType =='旧课件'?false:true) && showBtns">&#xe60c;</i>
+                <i class="iconfont" @click="EditCourse(scope.row)" v-show="(scope.row.DataType =='旧课件'?false:true) && showEditBtn">&#xe60c;</i>
               </el-tooltip>
               <el-tooltip class="item" effect="dark" content="发布" placement="bottom-start">
                 <i class="iconfont" @click="courseFtpPublish(scope.row)"
@@ -285,7 +285,7 @@
     </el-dialog>
     <!--新建工单对话框-->
     <el-dialog title="新建工单" :visible.sync="dialogWorkFormVisible" class="new-course-config">
-      <el-row :gutter="20">
+      <el-row :gutter="20" v-show="false">
         <el-col :span="3">工单编号:</el-col>
         <el-col :span="2">
           <el-input type="text" :disabled="true" v-model="newWorkFormId1"></el-input>
@@ -352,6 +352,7 @@
             <el-option label="640*360" value="640*360"></el-option>
             <el-option label="720*576" value="720*576"></el-option>
             <el-option label="1280*720" value="1280*720"></el-option>
+            <el-option label="1920*1080" value="1920*1080"></el-option>
           </el-select>
         </el-col>
         <el-col :span="3">自定义码率:</el-col>
@@ -703,6 +704,7 @@
         showFalse: false,
         showBtns: false,
         showConfigBtn: false,
+        showEditBtn: false,
         showCreateWorkForm: true,
         showDealWorkForm: false,
         DealBtnText:"下载课件",
@@ -792,8 +794,7 @@
     mounted() {
       var that = this;
       //this.myToken = localStorage.getItem('mytoken');
-      this.userType = localStorage.getItem('myusertype');
-      this.userName = localStorage.getItem('myusername');
+
       //通过链接登录 暂时以有mode为依据
       //  http://localhost:8080/#/HomePage?login=Z3dxX2d3cUAyMDE4&mode=dispatch&project=A-20180524-1
       if (this.getRequest()["mode"]) {
@@ -848,7 +849,7 @@
             }
             if (that.userType.search('SeniorWorker;') != -1 ) {
               that.showDealWorkForm = true;
-              that.showCreateWorkForm =false;
+              //that.showCreateWorkForm =false;
               that.DealProjectNewVisible=true;
               that.DealProjectOldVisible=true;
               //
@@ -938,9 +939,15 @@
                   else {
                     that.showFormWorkRequire +=  "不需要下载课件\n\r";
                   }
-                  workFormInfo.require.DisplaySize === "" ? that.showFormWorkRequire+="输出分辨率：未指定 ; " : that.showFormWorkRequire += "输出分辨率：" + workFormInfo.require.DisplaySize + " ; ";
-                  workFormInfo.require.BitRate === "" ? that.showFormWorkRequire+="码率：未指定 ; " : that.showFormWorkRequire += "码率：" + workFormInfo.require.BitRate + "K ; ";
-                  workFormInfo.require.IsWaterMark === "1" ? that.showFormWorkRequire +=  "水印：是\n\r" : that.showFormWorkRequire += "水印：否\n\r";
+                  if ( workFormInfo.require.DisplaySize==="")
+                  {
+                    that.showFormWorkRequire+="不需要输出视频\n\r"
+                  }
+                  else{
+                    that.showFormWorkRequire += "输出分辨率：" + workFormInfo.require.DisplaySize + " ; ";
+                    workFormInfo.require.BitRate === "" ? that.showFormWorkRequire+="码率：未指定 ; " : that.showFormWorkRequire += "码率：" + workFormInfo.require.BitRate + "K ; ";
+                    workFormInfo.require.IsWaterMark === "1" ? that.showFormWorkRequire +=  "水印：是\n\r" : that.showFormWorkRequire += "水印：否\n\r";
+                  }
                   workFormInfo.require.IsPic === "1" ? that.showFormWorkRequire += "做图：是 ; 要求：" + workFormInfo.require.PicNote + "\n\r" : that.showFormWorkRequire += "做图：否\n\r";
                   workFormInfo.require.IsTemplate === "1" ? that.showFormWorkRequire += "做模板：是 ; 要求：" + workFormInfo.require.TemplateNote : that.showFormWorkRequire += "做模板：否";
                     //that.showFormWorkModal = workFormInfo.require.template;
@@ -994,8 +1001,12 @@
       }
 
       //所有方式登录
+      this.userType = localStorage.getItem('myusertype');
+      this.userName = localStorage.getItem('myusername');
+      console.log('hit1');
+      console.log(this.userType);
       if (that.userType.search('seller;') != -1 || that.userType.search('SeniorSeller;') != -1) {
-        this.showCreateWorkForm = true;
+        that.showCreateWorkForm = true;
         that.showDealWorkForm = false;
         //客户信息
         var getCustomerUrl = 'http://newpms.cei.cn/customer/';
@@ -1007,8 +1018,9 @@
           console.log(err);
         })
       }
-      if (that.userType.search('SouthSeller;') != -1 ){
-        this.showCreateWorkForm = true
+      if (this.userType.search('SouthSeller;') != -1 ){
+        console.log('hit2');
+        that.showCreateWorkForm = true
         this.userArea = 's'
         var getCustomerUrl = 'http://newpms.cei.cn/customer/'
         this.$http.get(getCustomerUrl).then(function (res) {
@@ -1021,6 +1033,9 @@
       }
       if (that.userType.search('SeniorWorker;') != -1) {
         this.showDealWorkForm = true;
+      }
+      if (that.userType.search('SeniorEditor;') != -1 ) {
+        that.showEditBtn = true;
       }
       if (that.userType.search('editor;') != -1 || that.userType.search('manager;') != -1 || that.userType.search('SeniorEditor;') != -1 ) {
         that.showBtns = true;
@@ -1035,7 +1050,7 @@
         : nowDate.getMonth() + 1;
       var day = nowDate.getDate() < 10 ? "0" + nowDate.getDate() : nowDate
         .getDate();
-      this.newWorkFormNowDate = year + month + day;
+      this.newWorkFormNowDate = year.toString() + month.toString() + day.toString()   ;
 
       //获取模板选项内容
       var getModelUrl = 'http://newpms.cei.cn/coursetemplet/';
@@ -1598,6 +1613,7 @@
                   that.reShowTable();
                 }
                 else if (response.data.length > 1){
+                  hasSearchResult++;
                   response.data.forEach(function (item) {
                     that.myExcelMultiple.push(item);
                   });
@@ -1627,6 +1643,7 @@
                   that.reShowTable();
                 }
                 else if (response.data.length > 1){
+                  hasSearchResult++;
                   response.data.forEach(function (item) {
                     that.myExcelMultiple.push(item);
                   });
@@ -1817,7 +1834,6 @@
       },
       submitNewWorkForm() {
         var that = this;
-
         this.newWorkFormId = this.newWorkFormId1 + '-' + this.newWorkFormNowDate + '-' + this.newWorkFormId2;
         // console.log(this.newWorkFormId);
         // console.log(this.newWorkFormUserInfo);
@@ -2109,6 +2125,17 @@
             });
             that.AddCustomerBtnState = true
             that.AddCustomerBtnText = '客户已添加'
+            //data
+            var getCustomerUrl = 'http://newpms.cei.cn/customer/';
+            that.$http.get(getCustomerUrl).then(function (res) {
+              that.CustomerList = res.data.filter((t) => { return t.area == 'n' })
+            }).catch(function (err) {
+              console.log(err);
+            })
+            that.$message({
+              type: 'success',
+              message: '数据已刷新'
+            });
           } else if (res.status == 204) {
             that.$message({
               type: 'warning',
@@ -2129,6 +2156,7 @@
         else if(val=="640*360"){ BitRatio="300"; }
         else if(val=="720*576"){ BitRatio="500"; }
         else if(val=="1280*720"){ BitRatio="2000"; }
+        else if(val=="1920*1080"){ BitRatio="8000"; }
         else{ BitRatio=""; }
         this.newWorkFormBitRate=BitRatio;
         //console.log(this.newWorkAttachmentList);
