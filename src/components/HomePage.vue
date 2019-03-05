@@ -5,7 +5,8 @@
       <el-card class="box-card">
         <div>课程检索</div>
         <el-input type="text" v-model="className" placeholder="输入课程名称"></el-input>
-        <el-input type="text" v-model="classTeacher" placeholder="输入讲师名称"></el-input>
+        <el-input type="text" v-model="classGroup" style="width: 153px" placeholder="输入专题名称"></el-input>
+        <el-input type="text" v-model="classTeacher" style="width: 153px" placeholder="输入讲师名称"></el-input>
         <el-input type="text" v-model="classKeyword" placeholder="输入关键词"></el-input>
         <el-select
           v-model="videoType" style="width: 153px" placeholder="选择视频类型">
@@ -489,9 +490,9 @@
           <el-col :span="6">
             <el-button type="primary" @click="submitSendingProject('help')" :disabled="DealSendingHelpBtnState">{{DealSendingHelpBtnText}}</el-button>
           </el-col>
-          <!--<el-col :span="6">
+          <el-col :span="6">
             <el-button type="primary" @click="submitSendingProject('attachment')" :disabled="DealSendingAttachmentBtnState">{{DealSendingAttachmentBtnText}}</el-button>
-          </el-col>-->
+          </el-col>
           <el-col :span="6">
             <el-button type="primary" @click="submitSendingProject('template')" :disabled="DealSendingTemplateBtnState">{{DealSendingTemplateBtnText}}</el-button>
           </el-col>
@@ -654,6 +655,7 @@
         publishType:"none",
         isEspecialClass: "",
         className: '',
+        classGroup: "",
         classTeacher: '',
         classKeyword: '',
         classDate:[DefaultStartDate,DefaultEndDate],
@@ -760,6 +762,8 @@
         DealSendingTemplateBtnText:'分派模板制作',
         DealSendingPicBtnState:true,
         DealSendingPicBtnText:'分派图片制作',
+        DealSendingAttachmentBtnState:true,
+        DealSendingAttachmentBtnText:'分派素材制作',
         DealProjectOldVisible:false,
         DealProjectNewVisible:false,
         DealWorkFormTitle:'查看工单',
@@ -915,11 +919,24 @@
                   {
                     that.DealSendingPicBtnText="图片制作已完成";
                   }
+                  //
+                  if (workFormInfo.AttachmentSendingDate == "")
+                  {
+                    that.DealSendingAttachmentBtnState=false;
+                  }
+                  else{
+                    that.DealSendingAttachmentBtnText="素材正在制作";
+                  }
+                  if (workFormInfo.AttachmentFinishDate != "")
+                  {
+                    that.DealSendingAttachmentBtnText="素材制作已完成";
+                  }
+                  //
                   if (workFormInfo.FinishDate != "")
                   {
                     that.DealProjectBtnText="工单已完成";
                   }
-                  if (workFormInfo.FinishDate == "" && (workFormInfo.HelpSendingDate=="" || workFormInfo.HelperFinishDate != "")
+                  if (workFormInfo.FinishDate == "" && (workFormInfo.HelpSendingDate=="" || workFormInfo.HelperFinishDate != "") && (workFormInfo.AttachmentSendingDate=="" || workFormInfo.AttachmentFinishDate != "")
                     && (workFormInfo.TemplateSendingDate=="" || workFormInfo.TemplateFinishDate != "")  && (workFormInfo.PicSendingDate=="" || workFormInfo.PicFinishDate != ""))
                   {
                     that.DealProjectBtnState=false;
@@ -1196,13 +1213,13 @@
         var that = this;
         var urlNew = "http://newpms.cei.cn/course/FieldQuery/" +
           "?title=" + encodeURIComponent(this.className) + "&lecturer=" + encodeURIComponent(this.classTeacher)
-          + "&key=" + encodeURIComponent(this.classKeyword) + "&type=" + encodeURIComponent(this.videoType)
+          + "&key=" + encodeURIComponent(this.classKeyword) + "&type=" + encodeURIComponent(this.videoType) + "&group=" + encodeURIComponent(this.classGroup)
           + "&source=" + encodeURIComponent(this.isEspecialClass) + "&start="+encodeURIComponent(this.classDate[0].Format("yyyy-MM-dd HH:mm:ss"))
           + "&end="+encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet="+encodeURIComponent(this.publishType) + "&area=" + encodeURIComponent(this.userArea);
         // console.log(urlNew);
         var urlOld = "http://newpms.cei.cn/OldCourseQuery/" +
           "?title=" + encodeURIComponent(this.className) + "&lecturer=" + encodeURIComponent(this.classTeacher) +
-          "&key=" + encodeURIComponent(this.classKeyword) + "&type=" + encodeURIComponent(this.videoType)
+          "&key=" + encodeURIComponent(this.classKeyword) + "&type=" + encodeURIComponent(this.videoType) + "&group=" + encodeURIComponent(this.classGroup)
           + "&source=" + encodeURIComponent(this.isEspecialClass) + "&start="+encodeURIComponent(this.classDate[0].Format("yyyy-MM-dd HH:mm:ss"))
           + "&end="+encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet="+encodeURIComponent(this.publishType) + "&area=" + encodeURIComponent(this.userArea);
         this.$http.get(urlNew, {headers: {'Authorization': 'JWT ' + that.myToken}})
@@ -1728,14 +1745,19 @@
       //
       EditCourse(row) {
           var login = encodeURIComponent(this.encode64(this.userName+'_'+this.userPassword));
-          console.log(this.userName+'_'+this.userPassword);
+          //console.log(this.userName+'_'+this.userPassword);
+          var url='SlideEdit';
+          if(row.TempletType === 'NoSlide')
+          {
+            url='CourseUpload';
+          }
           if (row.SourceCourseId != '' && row.SourceCourseId && typeof(row.SourceCourseId)!='undefined') {
-            console.log('http://newpms.cei.cn/SlideEdit/?id=' + row.SourceCourseId + '&link=' + login);
-            window.open('http://newpms.cei.cn/SlideEdit/?id=' + row.SourceCourseId + '&link=' + login);
+            console.log('http://newpms.cei.cn/'+ url + '/?id=' + row.SourceCourseId + '&link=' + login);
+            window.open('http://newpms.cei.cn/'+ url + '/?id=' + row.SourceCourseId + '&link=' + login);
           }
           else {
             console.log();
-            window.open('http://newpms.cei.cn/SlideEdit/?id=' + row.CourseId + '&link=' + login);
+            window.open('http://newpms.cei.cn/'+ url + '/?id=' + row.CourseId + '&link=' + login);
           }
       },
 
@@ -1850,7 +1872,7 @@
           newWorkCourseTemplate="";
         }
         else {
-          newWorkCourseTemplate=that.newWorkIsTemplate;
+          newWorkCourseTemplate=that.newWorkFormModel;
         }
         this.$axios({
           method: 'post',
@@ -1938,7 +1960,7 @@
           headers: {'Authorization': 'JWT ' + that.myToken},
           data: {
             "TaskType": "CourseDownload",
-            "TaskNote": dealNote,
+            "TaskNote": that.showFormWorkId+'_'+that.showFormWorkCustomerName+'_新课_'+dealNote,
             "ExtendedData": extendedData,
             "course": showFormWorkAllCourseDataIds,
             "customer":that.showFormWorkCustomerId,
@@ -1996,7 +2018,7 @@
           headers: {'Authorization': 'JWT ' + that.myToken},
           data: {
             "TaskType": "OldCourseDownload",
-            "TaskNote": dealNote,
+            "TaskNote": that.showFormWorkId+'_'+that.showFormWorkCustomerName+'_旧课_'+dealNote,
             "ExtendedData": extendedData,
             "course": null,
             "customer":that.showFormWorkCustomerId,
@@ -2092,6 +2114,11 @@
             {
               that.DealSendingTemplateBtnState = true;
               that.DealSendingTemplateBtnText='已发送';
+            }
+            else if (type == "attachment")
+            {
+              that.DealSendingAttachmentBtnState = true;
+              that.DealSendingAttachmentBtnText='已发送';
             }
             else { }
           } else if (res.status == 204) {
