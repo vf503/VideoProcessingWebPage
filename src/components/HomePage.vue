@@ -191,6 +191,7 @@
             </el-table-column>
           </el-table>
         </div>
+        <!--新课列表-->
         <div class="new-class-result">
           <div class="search-table-head">
             <span>新课列表</span>
@@ -201,17 +202,18 @@
             </div>
           </div>
           <div class="new-class-table">
-            <el-table id="new_class_table" ref="multipleTableNew" :data="tableDataNew" tooltip-effect="dark"
+            <el-table id="new_class_table" ref="multipleTableNew" :data="tableDataNew" tooltip-effect="dark" max-height="500"
                       :default-sort="{prop: 'CreateDate', order: 'descending'}">
+              <el-table-column type="index" width="55"></el-table-column>
               <el-table-column prop="CreateDate" label="日期" sortable width="100">
               </el-table-column>
               <el-table-column prop="title" label="题目" show-overflow-tooltip>
               </el-table-column>
-              <el-table-column prop="lecturer_name" label="讲师" width="100">
+              <el-table-column prop="lecturer_name" label="讲师" width="80">
               </el-table-column>
               <!--<el-table-column prop="CourseId" label="编号" sortable width="100">
               </el-table-column>-->
-              <el-table-column label="操作" width="100">
+              <el-table-column label="操作" width="80">
                 <template slot-scope="scope">
                   <el-button size="mini" @click="handleNewDelete(scope.$index, scope.row)">删除</el-button>
                 </template>
@@ -220,27 +222,30 @@
 
           </div>
         </div>
+        <!--旧课列表-->
         <div class="old-class-result">
           <div class="search-table-head">
             <span>旧课列表</span>
             <el-tag style="margin-left: 10px">合计: {{ tableDataOld.length }}</el-tag>
             <div>
               <el-button type="primary" plain @click="exportOldExcel()">导出列表</el-button>
+              <el-button type="primary" plain @click="dialogImportVideoVisible = true;">导入视频</el-button>
               <el-button type="primary" plain @click="tableDataOld = []">全部删除</el-button>
             </div>
           </div>
           <div class="old-class-table">
-            <el-table id="old_class_table" ref="multipleTableOld" :data="tableDataOld" tooltip-effect="dark"
+            <el-table id="old_class_table" ref="multipleTableOld" :data="tableDataOld" tooltip-effect="dark" max-height="500"
                       :default-sort="{prop: 'CreateDate', order: 'descending'}">
+              <el-table-column type="index" width="55"></el-table-column>
               <el-table-column prop="CreateDate" label="日期" sortable width="100">
               </el-table-column>
               <el-table-column prop="title" label="题目" show-overflow-tooltip>
               </el-table-column>
-              <el-table-column prop="lecturer_name" label="讲师" width="100">
+              <el-table-column prop="lecturer_name" label="讲师" width="80">
               </el-table-column>
               <!--<el-table-column prop="CourseId" label="编号" sortable width="100">
               </el-table-column>-->
-              <el-table-column label="操作" width="100">
+              <el-table-column label="操作" width="80">
                 <template slot-scope="scope">
                   <el-button size="mini" @click="handleOldDelete(scope.$index, scope.row)">删除</el-button>
                 </template>
@@ -363,10 +368,12 @@
         <el-col :span="3">
           单位：K (1M=1024K)
         </el-col>
-        <el-col :span="3">是否加水印:</el-col>
+        <el-col :span="2">水印:</el-col>
         <el-col :span="4">
-          <el-radio v-model="newWorkIsWaterMark" label="1">是</el-radio>
-          <el-radio v-model="newWorkIsWaterMark" label="0">否</el-radio>
+          <el-select v-model="newWorkIsWaterMark" placeholder="请选择">
+            <el-option label="不需要" value="不需要"></el-option>
+            <el-option label="中经视频" value="中经视频"></el-option>
+          </el-select>
         </el-col>
       </el-row>
       <el-row :gutter="20">
@@ -376,6 +383,8 @@
             <el-checkbox label="text">全文(TXT格式)</el-checkbox>
             <el-checkbox label="ppt">PPT</el-checkbox>
             <el-checkbox label="test">考题</el-checkbox>
+            <el-checkbox label="summary">简介</el-checkbox>
+            <el-checkbox label="lecturer">教师简介</el-checkbox>
          </el-checkbox-group>
         </el-col>
       </el-row>
@@ -528,13 +537,20 @@
         </el-row>
         <el-row :gutter="20">
           <el-col :span="4">输出视频:</el-col>
-          <el-col :span="20">
+          <el-col :span="8">
             <el-select v-model="dealWorkFormRatio" placeholder="请选择分辨率">
               <el-option label="不需要" value=""></el-option>
               <el-option label="352*288" value="352*288"></el-option>
               <el-option label="640*360" value="640*360"></el-option>
               <el-option label="720*576" value="720*576"></el-option>
               <el-option label="1280*720" value="1280*720"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="2">水印:</el-col>
+          <el-col :span="4">
+            <el-select v-model="dealWorkIsWaterMark" placeholder="请选择">
+              <el-option label="不需要" value="none"></el-option>
+              <el-option label="中经视频" value="zjsp"></el-option>
             </el-select>
           </el-col>
         </el-row>
@@ -552,6 +568,8 @@
               <el-checkbox label="text">全文(TXT格式)</el-checkbox>
               <el-checkbox label="ppt">PPT</el-checkbox>
               <el-checkbox label="test">考题</el-checkbox>
+              <el-checkbox label="summary">简介</el-checkbox>
+              <el-checkbox label="lecturer">教师简介</el-checkbox>
             </el-checkbox-group>
           </el-col>
         </el-row>
@@ -586,6 +604,22 @@
           </el-col>
         </el-row>
         <el-row :gutter="20">
+          <el-col :span="4">输出视频:</el-col>
+          <el-col :span="8">
+            <el-select v-model="dealOldWorkFormRatio" placeholder="请选择分辨率" disabled="false">
+              <el-option label="不需要" value=""></el-option>
+              <el-option label="1280*720" value="1280*720"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="2">水印:</el-col>
+          <el-col :span="4">
+            <el-select v-model="dealOldWorkIsWaterMark" placeholder="请选择" disabled="false">
+              <el-option label="不需要" value="none"></el-option>
+              <el-option label="中经视频" value="zjsp"></el-option>
+            </el-select>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
           <el-col :span="4">是否改名:</el-col>
           <el-col :span="20">
             <el-radio v-model="dealOldWorkFormRename" label="1">是</el-radio>
@@ -599,6 +633,8 @@
               <el-checkbox label="text">全文(TXT格式)</el-checkbox>
               <el-checkbox label="ppt">PPT</el-checkbox>
               <el-checkbox label="test">考题</el-checkbox>
+              <el-checkbox label="summary">简介</el-checkbox>
+              <el-checkbox label="lecturer">教师简介</el-checkbox>
             </el-checkbox-group>
           </el-col>
         </el-row>
@@ -609,6 +645,22 @@
           </el-col>
         </el-row>
       </el-card>
+    </el-dialog>
+    <!--导入视频-->
+    <el-dialog title="导入旧课视频" :visible.sync="dialogImportVideoVisible" class="new-course-config">
+      <el-row :gutter="20">
+        <el-col :span="3">是否有水印:</el-col>
+        <el-col :span="20">
+          <el-radio v-model="ImportVideoWaterMark" label="true">是</el-radio>
+          <el-radio v-model="ImportVideoWaterMark" label="false">否</el-radio>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="20">_</el-col>
+        <el-col :span="4">
+          <el-button type="primary" @click="submitImportVideo">提交任务</el-button>
+        </el-col>
+      </el-row>
     </el-dialog>
   </div>
 </template>
@@ -735,7 +787,7 @@
         newWorkIsTemplate: '0',
         newWorkTemplateNote: '',
         newWorkFormBitRate: '',
-        newWorkIsWaterMark: '1',
+        newWorkIsWaterMark: '不需要',
         newWorkDeadLine: '',
         newWorkCourseChecked:false,
         newWorkAttachmentList:[],
@@ -786,10 +838,17 @@
         dealWorkFormNote: '',
         dealWorkFormRename: '1',
         dealWorkAttachmentList:[],
+        dealWorkIsWaterMark:'zjsp',
         dealOldWorkFormRename:'1',
+        dealOldWorkIsWaterMark:'zjsp',
+        dealOldWorkFormRatio:'',
         dealOldWorkAttachmentList:[],
         oldTemplate:[],
         oldTemplateVal:'',
+
+        /*导入视频变量*/
+        dialogImportVideoVisible:false,
+        ImportVideoWaterMark:'true',
 
         /*从后台获取的供选择的模板信息*/
         videoModelForChoose: [],
@@ -988,7 +1047,7 @@
                 });
               }
               else{
-                that.DealBtnText="下载新课";
+                that.DealBtnText="下载";
               }
             }
             //mode
@@ -1623,10 +1682,34 @@
                 that.searchProgress = parseInt(myProgress / allProgree * 100);
                 if (response.data.length == 1) {
                   hasSearchResult++;
-                  response.data.forEach(function (item) {
+                  if (searchType === 'title'){
+                    that.$http.get("http://newpms.cei.cn/OldCourseQueryExacted/?field=title&val=" + response.data[0]["title"], {headers: {'Authorization': 'JWT ' + that.myToken}})
+                      .then(function (ResponseOld) {
+                        if (ResponseOld.data.length > 0) {
+                          response.data.forEach(function (item) {
+                            that.myExcelMultiple.push(item);
+                          });
+                        }
+                        else{
+                          response.data.forEach(function (item) {
+                            item.DataType = "新课件";
+                            that.allTableData.push(item);
+                          });
+                        }
+                        var mySheetStatus = hasSearchResult > 0 ? 0 : 1;
+                        that.myExcel[index].status = mySheetStatus;
+                        that.reShowTable();
+                      })
+                      .catch(function (error) {
+                        console.log(error);
+                      });
+                  }
+                  else{
+                    response.data.forEach(function (item) {
                     item.DataType = "新课件";
                     that.allTableData.push(item);
                   });
+                  }
                   that.reShowTable();
                 }
                 else if (response.data.length > 1){
@@ -1654,10 +1737,33 @@
                 that.searchProgress = parseInt(myProgress / allProgree * 100);
                 if (response.data.length == 1) {
                   hasSearchResult++;
-                  response.data.forEach(function (item) {
+                  if (searchType == 'title'){
+                    that.$http.get("http://newpms.cei.cn/course/FieldQueryExacted/?field=title&val=" + response.data[0]["title"], {headers: {'Authorization': 'JWT ' + that.myToken}})
+                      .then(function (ResponseNew) {
+                        if (ResponseNew.data.length > 0) {
+                          response.data.forEach(function (item) {
+                            that.myExcelMultiple.push(item);
+                          });
+                        }
+                        else{
+                          response.data.forEach(function (item) {
+                            that.allTableData.push(item);
+                          });
+                        }
+                        var mySheetStatus = hasSearchResult > 0 ? 0 : 1;
+                        that.myExcel[index].status = mySheetStatus;
+                        that.reShowTable();
+                      })
+                      .catch(function (error) {
+                        console.log(error);
+                      });
+                  }
+                  else{
+                    response.data.forEach(function (item) {
                     that.allTableData.push(item);
                   });
                   that.reShowTable();
+                  }
                 }
                 else if (response.data.length > 1){
                   hasSearchResult++;
@@ -1677,7 +1783,6 @@
                     }
                   })
                 }
-
               })
               .catch(function (error) {
                 console.log(error);
@@ -1697,8 +1802,8 @@
             that.allTableChosen.push(item);
             that.allTableChosenId.push(item.CourseId)
           }
-
-          if (item.DataType == '新课件') {
+          //新课无DataType
+          if (item.DataType == null) {
             if (that.newCourseIds.indexOf(item.CourseId) < 0) {
               that.tableDataNew.push(item);
               that.newCourseIds.push(item.CourseId);
@@ -1896,6 +2001,8 @@
               "AttText":IsInArray(that.newWorkAttachmentList,'text').toString(),
               "AttPPT":IsInArray(that.newWorkAttachmentList,'ppt').toString(),
               "AttTest":IsInArray(that.newWorkAttachmentList,'test').toString(),
+              "AttSummary":IsInArray(that.newWorkAttachmentList,'summary').toString(),
+              "AttLecturer":IsInArray(that.newWorkAttachmentList,'lecturer').toString()
             },
             "CourseData": that.tableDataNew.concat(that.tableDataOld)
           },
@@ -1945,9 +2052,12 @@
           "template": that.dealWorkFormModel,
           "DisplaySize": that.dealWorkFormRatio,
           "rename": that.dealWorkFormRename,
+          "WaterMark": that.dealWorkIsWaterMark,
           "AttText":IsInArray(that.dealWorkAttachmentList,'text'),
           "AttPPT":IsInArray(that.dealWorkAttachmentList,'ppt'),
-          "AttTest":IsInArray(that.dealWorkAttachmentList,'test')
+          "AttTest":IsInArray(that.dealWorkAttachmentList,'test'),
+          "AttSummary":IsInArray(that.dealWorkAttachmentList,'summary'),
+          "AttLecturer":IsInArray(that.dealWorkAttachmentList,'lecturer')
         };
         extendedData = JSON.stringify(extendedData);
         var dealNote="无";
@@ -2000,11 +2110,14 @@
         var extendedData = {
           "template": that.oldTemplateVal,
           "template2012": that.oldTemplate2012Val,
-          //"DisplaySize": that.dealWorkFormRatio,
+          "DisplaySize": that.dealOldWorkFormRatio,
+          "WaterMark": that.dealOldWorkIsWaterMark,
           "rename": that.dealOldWorkFormRename,
           "AttText":IsInArray(that.dealOldWorkAttachmentList,'text'),
           "AttPPT":IsInArray(that.dealOldWorkAttachmentList,'ppt'),
           "AttTest":IsInArray(that.dealOldWorkAttachmentList,'test'),
+          "AttSummary":IsInArray(that.dealOldWorkAttachmentList,'summary'),
+          "AttLecturer":IsInArray(that.dealOldWorkAttachmentList,'lecturer'),
           "CourseList": OldCourseIdList
         };
         extendedData = JSON.stringify(extendedData);
@@ -2022,6 +2135,55 @@
             "ExtendedData": extendedData,
             "course": null,
             "customer":that.showFormWorkCustomerId,
+          }
+        }).then(function (res) {
+          console.log(res);
+          if (res.status == 201) {
+            that.$message({
+              type: 'success',
+              message: '任务已添加'
+            });
+            that.DealOldBtnState=true;
+            that.DealOldBtnText='任务已添加';
+          } else if (res.status == 204) {
+            that.$message({
+              type: 'warning',
+              message: '重复操作'
+            });
+            //that.dialogWorkFormVisible = false;
+          }
+        }).catch(function (err) {
+          that.$message({
+            type: 'warning',
+            message: '错误！'
+          });
+          console.log(err);
+        });
+      },
+      submitImportVideo() {
+        var that = this;
+        var OldCourseIdList = [];
+        //this.showFormWorkAllCourseData.forEach(function (item) {
+        this.tableDataOld.forEach(function (item) {
+          OldCourseIdList.push({"id":item.CourseId,"title":item.title,"type":item.TempletType});
+        });
+        var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
+        var extendedData = {
+          "WaterMark": new Boolean(that.ImportVideoWaterMark),
+          "CourseList": OldCourseIdList
+        };
+        extendedData = JSON.stringify(extendedData);
+        var dealNote="无";
+        this.$axios({
+          method: 'post',
+          url: myDealWorkFormTokenUrl,
+          headers: {'Authorization': 'JWT ' + that.myToken},
+          data: {
+            "TaskType": "OldCourseUploadVideo",
+            "TaskNote": '导入旧课视频_'+dealNote,
+            "ExtendedData": extendedData,
+            "course": null,
+            "customer":null,
           }
         }).then(function (res) {
           console.log(res);

@@ -31,16 +31,20 @@
       },
       methods: {
         handleSelect(key, keyPath) {
+          //取得整个地址栏
+          let UrlStr=location.href,num=UrlStr.indexOf("?");
+          //取得所有参数
+          UrlStr=UrlStr.substr(num+1);
           this.$emit('getMenuIndex',key);
           this.activeIndex=key
           console.log(this.activeIndex)
           if(key==1)
           {
-            this.$router.push('/HomePage');
+            this.$router.push('/HomePage?'+UrlStr);
           }
           else if (key==2)
           {
-            this.$router.push('/TaskList');
+            this.$router.push('/TaskList?'+UrlStr);
           }
         }
       }
