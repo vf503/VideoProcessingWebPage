@@ -400,7 +400,8 @@
           <el-date-picker
             v-model="newWorkDeadLine"
             type="date"
-            placeholder="选择日期">
+            placeholder="选择日期"
+            value-format="yyyy-MM-dd">
           </el-date-picker>
         </el-col>
       </el-row>
@@ -604,22 +605,6 @@
           </el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="4">输出视频:</el-col>
-          <el-col :span="8">
-            <el-select v-model="dealOldWorkFormRatio" placeholder="请选择分辨率" disabled="false">
-              <el-option label="不需要" value=""></el-option>
-              <el-option label="1280*720" value="1280*720"></el-option>
-            </el-select>
-          </el-col>
-          <el-col :span="2">水印:</el-col>
-          <el-col :span="4">
-            <el-select v-model="dealOldWorkIsWaterMark" placeholder="请选择" disabled="false">
-              <el-option label="不需要" value="none"></el-option>
-              <el-option label="中经视频" value="zjsp"></el-option>
-            </el-select>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
           <el-col :span="4">是否改名:</el-col>
           <el-col :span="20">
             <el-radio v-model="dealOldWorkFormRename" label="1">是</el-radio>
@@ -644,7 +629,80 @@
             <el-button type="primary" @click="submitDealOld" :disabled="DealOldBtnState">{{DealOldBtnText}}</el-button>
           </el-col>
         </el-row>
+        <el-row :gutter="20">
+          <el-col :span="4">输出视频:</el-col>
+          <el-col :span="2">
+            <el-button size="mini" type="primary" plain round @click="OldVideoQuery">预处理</el-button>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20" v-show="IsOldVideoQuery">
+          <el-col :span="4">_</el-col>
+          <el-col :span="2">
+            <el-button size="mini" type="primary" round @click="ShowOldVideoNoWaterCount">{{ NoWaterVideoCount }}</el-button>
+          </el-col>
+          <el-col :span="8">
+            <el-select v-model="dealOldWorkFormRatio" placeholder="请选择分辨率">
+              <el-option label="不需要" value=""></el-option>
+              <el-option label="1280*720" value="1280*720"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="4">
+            <el-select v-model="dealOldWorkIsWaterMark" placeholder="请选择水印">
+              <el-option label="不需要" value="none"></el-option>
+              <el-option label="中经视频" value="zjsp"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="2">
+            <el-button size="small" type="primary">输出</el-button>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20" v-show="IsOldVideoQuery">
+          <el-col :span="4">_</el-col>
+          <el-col :span="2">
+            <el-button size="mini" type="primary" round @click="ShowOldVideoWithWaterCount">{{ WithWaterVideoCount }}</el-button>
+          </el-col>
+          <el-col :span="8">
+            固定1280x720加中经视频水印
+          </el-col>
+          <el-col :span="2">
+            <el-button size="small" type="primary">输出</el-button>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20" v-show="IsOldVideoQuery">
+          <el-col :span="4">_</el-col>
+          <el-col :span="2">
+            <el-button size="mini" type="primary" round @click="ShowOldVideoHelpCount">{{ HelpVideoCount }}</el-button>
+          </el-col>
+          <el-col :span="4">
+            库中未保存视频
+          </el-col>
+          <el-col :span="4">
+            包括固定水印部分
+          </el-col>
+          <el-col :span="2">
+            <el-switch v-model="IsHelpWaterMark" @change="SwitchHelpVideoList">
+            </el-switch>
+          </el-col>
+          <el-col :span="2">
+            <el-button size="small" type="primary">分派辅助制作</el-button>
+          </el-col>
+        </el-row>
       </el-card>
+    </el-dialog>
+    <!--旧视频列表对话框-->
+    <el-dialog :visible.sync="dialogOldVideoListVisible" class="new-course-config" width="1000">
+      <el-table ref="multipleTable" :data="OldVideoTableData" id="oldvideo_table" max-height="800" :default-sort="{prop: 'title', order: 'descending'}">
+        <el-table-column prop="CourseId" label="编号" sortable>
+        </el-table-column>
+        <el-table-column prop="CreateDate" label="日期" width="100" sortable>
+        </el-table-column>
+        <el-table-column prop="title" label="题目">
+        </el-table-column>
+        <el-table-column prop="lecturer_name" label="讲师" width="70">
+        </el-table-column>
+        <el-table-column prop="TempletType" label="类型" width="70">
+        </el-table-column>
+      </el-table>
     </el-dialog>
     <!--导入视频-->
     <el-dialog title="导入旧课视频" :visible.sync="dialogImportVideoVisible" class="new-course-config">
@@ -829,8 +887,6 @@
         showFormWorkCheckDate: '',
         showFormWorkCheckNote: '',
         showFormWorkAllCourseData: '',
-        oldTemplate2012:[],
-        oldTemplate2012Val:'',
 
         /*处理工单-信息填写的变量*/
         dealWorkFormModel: '',
@@ -840,11 +896,24 @@
         dealWorkAttachmentList:[],
         dealWorkIsWaterMark:'zjsp',
         dealOldWorkFormRename:'1',
-        dealOldWorkIsWaterMark:'zjsp',
+        dealOldWorkIsWaterMark:'',
         dealOldWorkFormRatio:'',
         dealOldWorkAttachmentList:[],
         oldTemplate:[],
         oldTemplateVal:'',
+        oldTemplate2012:[],
+        oldTemplate2012Val:'',
+        IsOldVideoQuery:false,
+        OldNoWaterFilterList:[],
+        OldWithWaterFilterList:[],
+        OldNoVideoFilterList:[],
+        OldVideoHelpList:[],
+        OldVideoTableData:[],
+        dialogOldVideoListVisible:false,
+        IsHelpWaterMark:false,
+        HelpVideoCount:0,
+        WithWaterVideoCount:0,
+        NoWaterVideoCount:0,
 
         /*导入视频变量*/
         dialogImportVideoVisible:false,
@@ -1022,10 +1091,17 @@
                   else{
                     that.showFormWorkRequire += "输出分辨率：" + workFormInfo.require.DisplaySize + " ; ";
                     workFormInfo.require.BitRate === "" ? that.showFormWorkRequire+="码率：未指定 ; " : that.showFormWorkRequire += "码率：" + workFormInfo.require.BitRate + "K ; ";
-                    workFormInfo.require.IsWaterMark === "1" ? that.showFormWorkRequire +=  "水印：是\n\r" : that.showFormWorkRequire += "水印：否\n\r";
+                    that.showFormWorkRequire +="水印：";
+                    that.showFormWorkRequire +=workFormInfo.require.IsWaterMark+"\n\r";
                   }
                   workFormInfo.require.IsPic === "1" ? that.showFormWorkRequire += "做图：是 ; 要求：" + workFormInfo.require.PicNote + "\n\r" : that.showFormWorkRequire += "做图：否\n\r";
-                  workFormInfo.require.IsTemplate === "1" ? that.showFormWorkRequire += "做模板：是 ; 要求：" + workFormInfo.require.TemplateNote : that.showFormWorkRequire += "做模板：否";
+                  workFormInfo.require.IsTemplate === "1" ? that.showFormWorkRequire += "做模板：是 ; 要求：" + workFormInfo.require.TemplateNote+"\n\r" : that.showFormWorkRequire += "做模板：否\n\r";
+                  that.showFormWorkRequire +="附件要求：";
+                  workFormInfo.require.AttText ==="true"? that.showFormWorkRequire += "全文、" : that.showFormWorkRequire += "";
+                  workFormInfo.require.AttPPT ==="true"? that.showFormWorkRequire += "PPT、" : that.showFormWorkRequire += "";
+                  workFormInfo.require.AttTest ==="true"? that.showFormWorkRequire += "考题、" : that.showFormWorkRequire += "";
+                  workFormInfo.require.AttSummary ==="true"? that.showFormWorkRequire += "简介、" : that.showFormWorkRequire += "";
+                  workFormInfo.require.AttLecturer ==="true"? that.showFormWorkRequire += "教师简介" : that.showFormWorkRequire += "";
                     //that.showFormWorkModal = workFormInfo.require.template;
                   //that.showFormWorkRatio = workFormInfo.require.DisplaySize;
                   //
@@ -1852,7 +1928,8 @@
           var login = encodeURIComponent(this.encode64(this.userName+'_'+this.userPassword));
           //console.log(this.userName+'_'+this.userPassword);
           var url='SlideEdit';
-          if(row.TempletType === 'NoSlide')
+          console.log(row.TempletType);
+          if(row.TempletType === '单视频')
           {
             url='CourseUpload';
           }
@@ -2101,65 +2178,78 @@
       },
       submitDealOld() {
         var that = this;
-        var OldCourseIdList = [];
-        //this.showFormWorkAllCourseData.forEach(function (item) {
-        this.tableDataOld.forEach(function (item) {
-          OldCourseIdList.push({"id":item.CourseId,"title":item.title,"type":item.TempletType});
-        });
-        var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
-        var extendedData = {
-          "template": that.oldTemplateVal,
-          "template2012": that.oldTemplate2012Val,
-          "DisplaySize": that.dealOldWorkFormRatio,
-          "WaterMark": that.dealOldWorkIsWaterMark,
-          "rename": that.dealOldWorkFormRename,
-          "AttText":IsInArray(that.dealOldWorkAttachmentList,'text'),
-          "AttPPT":IsInArray(that.dealOldWorkAttachmentList,'ppt'),
-          "AttTest":IsInArray(that.dealOldWorkAttachmentList,'test'),
-          "AttSummary":IsInArray(that.dealOldWorkAttachmentList,'summary'),
-          "AttLecturer":IsInArray(that.dealOldWorkAttachmentList,'lecturer'),
-          "CourseList": OldCourseIdList
-        };
-        extendedData = JSON.stringify(extendedData);
-        var dealNote="无";
-        if(that.dealOldWorkFormNote){
-          dealNote=that.dealOldWorkFormNote;
-        }
-        this.$axios({
-          method: 'post',
-          url: myDealWorkFormTokenUrl,
-          headers: {'Authorization': 'JWT ' + that.myToken},
-          data: {
-            "TaskType": "OldCourseDownload",
-            "TaskNote": that.showFormWorkId+'_'+that.showFormWorkCustomerName+'_旧课_'+dealNote,
-            "ExtendedData": extendedData,
-            "course": null,
-            "customer":that.showFormWorkCustomerId,
-          }
-        }).then(function (res) {
-          console.log(res);
-          if (res.status == 201) {
-            that.$message({
-              type: 'success',
-              message: '任务已添加'
-            });
-            that.DealOldBtnState=true;
-            that.DealOldBtnText='任务已添加';
-          } else if (res.status == 204) {
-            that.$message({
-              type: 'warning',
-              message: '重复操作'
-            });
-            //that.dialogWorkFormVisible = false;
-          }
-        }).catch(function (err) {
+        if((that.oldTemplateVal=="" && that.oldTemplate2012Val!="")||(that.oldTemplateVal!="" && that.oldTemplate2012Val==""))
+        {
           that.$message({
             type: 'warning',
-            message: '错误！'
+            message: '模板信息不全'
           });
-          console.log(err);
-        });
+        }
+        else
+        {
+          var OldCourseIdList = [];
+          //this.showFormWorkAllCourseData.forEach(function (item) {
+          this.tableDataOld.forEach(function (item) {
+            OldCourseIdList.push({"id": item.CourseId, "title": item.title, "type": item.TempletType});
+          });
+          var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
+          var extendedData = {
+            "template": that.oldTemplateVal,
+            "template2012": that.oldTemplate2012Val,
+            "DisplaySize": that.dealOldWorkFormRatio,
+            "WaterMark": that.dealOldWorkIsWaterMark,
+            "rename": that.dealOldWorkFormRename,
+            "AttText": IsInArray(that.dealOldWorkAttachmentList, 'text'),
+            "AttPPT": IsInArray(that.dealOldWorkAttachmentList, 'ppt'),
+            "AttTest": IsInArray(that.dealOldWorkAttachmentList, 'test'),
+            "AttSummary": IsInArray(that.dealOldWorkAttachmentList, 'summary'),
+            "AttLecturer": IsInArray(that.dealOldWorkAttachmentList, 'lecturer'),
+            "CourseList": OldCourseIdList
+          };
+          extendedData = JSON.stringify(extendedData);
+          var dealNote = "无";
+          if (that.dealOldWorkFormNote) {
+            dealNote = that.dealOldWorkFormNote;
+          }
+          this.$axios({
+            method: 'post',
+            url: myDealWorkFormTokenUrl,
+            headers: {'Authorization': 'JWT ' + that.myToken},
+            data: {
+              "TaskType": "OldCourseDownload",
+              "TaskNote": that.showFormWorkId + '_' + that.showFormWorkCustomerName + '_旧课_' + dealNote,
+              "ExtendedData": extendedData,
+              "course": null,
+              "customer": that.showFormWorkCustomerId,
+            }
+          }).then(function (res) {
+            console.log(res);
+            if (res.status == 201) {
+              that.$message({
+                type: 'success',
+                message: '任务已添加'
+              });
+              that.DealOldBtnState = true;
+              that.DealOldBtnText = '任务已添加';
+            } else if (res.status == 204) {
+              that.$message({
+                type: 'warning',
+                message: '重复操作'
+              });
+              //that.dialogWorkFormVisible = false;
+            }
+          }).catch(function (err) {
+            that.$message({
+              type: 'warning',
+              message: '错误！'
+            });
+            console.log(err);
+          });
+        }
       },
+      submitOldVideoCheck () {
+
+        },
       submitImportVideo() {
         var that = this;
         var OldCourseIdList = [];
@@ -2349,6 +2439,69 @@
         else{ BitRatio=""; }
         this.newWorkFormBitRate=BitRatio;
         //console.log(this.newWorkAttachmentList);
+      },
+      OldVideoQuery() {
+        var that = this;
+        var url = 'http://newpms.cei.cn/OldVideoQuery/';
+        this.$axios({
+          method: 'post',
+          url: url,
+          headers: {'Authorization': 'JWT ' + that.myToken},
+          data: {
+            "CourseList": that.tableDataOld
+          }
+        }).then(function (res) {
+          console.log(res);
+          if (res.status == 200) {
+            that.$message({
+              type: 'success',
+              message: '查询成功'
+            });
+            that.OldNoWaterFilterList=res.data.OldNoWaterFilterList;
+            that.OldWithWaterFilterList=res.data.OldWithWaterFilterList;
+            that.OldNoVideoFilterList=res.data.OldNoVideoFilterList;
+            that.OldVideoHelpList=res.data.OldNoVideoFilterList;
+            that.HelpVideoCount=getJsonLength(that.OldNoVideoFilterList);
+            that.WithWaterVideoCount=getJsonLength(that.OldWithWaterFilterList);
+            that.NoWaterVideoCount=getJsonLength(that.OldNoWaterFilterList),
+            that.IsOldVideoQuery=true;
+          } else if (res.status == 204) {
+            that.$message({
+              type: 'warning',
+              message: ''
+            });
+            //that.dialogWorkFormVisible = false;
+          }
+        }).catch(function (err) {
+          that.$message({
+            type: 'warning',
+            message: '错误！'
+          });
+          console.log(err);
+        });
+      },
+      ShowOldVideoNoWaterCount(){
+        this.OldVideoTableData=this.OldNoWaterFilterList;
+        this.dialogOldVideoListVisible=true;
+      },
+      ShowOldVideoWithWaterCount(){
+        this.OldVideoTableData=this.OldWithWaterFilterList;
+        this.dialogOldVideoListVisible=true;
+      },
+      ShowOldVideoHelpCount(){
+        this.OldVideoTableData=this.OldVideoHelpList;
+        this.dialogOldVideoListVisible=true;
+      },
+      SwitchHelpVideoList(){
+        //console.log(this.IsHelpWaterMark);
+        if(this.IsHelpWaterMark){
+          this.HelpVideoCount=getJsonLength(this.OldNoVideoFilterList)+getJsonLength(this.OldWithWaterFilterList);
+          this.OldVideoHelpList=this.OldNoVideoFilterList.concat(this.OldWithWaterFilterList);
+        }
+        else{
+          this.HelpVideoCount=getJsonLength(this.OldNoVideoFilterList);
+          this.OldVideoHelpList=this.OldNoVideoFilterList;
+        }
       }
     }
   }
@@ -2374,6 +2527,13 @@
   function IsInArray(arr,val){
     var testStr=','+arr.join(",")+",";
     return testStr.indexOf(","+val+",")!=-1;
+  }
+  function getJsonLength(jsonData){
+    var jsonLength = 0;
+    for(var item in jsonData){
+      jsonLength++;
+    }
+    return jsonLength;
   }
   //
 </script>
