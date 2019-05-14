@@ -498,7 +498,7 @@
         <el-tag  type="info">流程处理</el-tag>
         <el-row :gutter="20">
           <el-col :span="6">
-            <el-button type="primary" @click="submitSendingProject('help')" :disabled="DealSendingHelpBtnState">{{DealSendingHelpBtnText}}</el-button>
+            <el-button type="primary" @click="submitSendingProject('help')" disabled>{{DealSendingHelpBtnText}}</el-button>
           </el-col>
           <el-col :span="6">
             <el-button type="primary" @click="submitSendingProject('attachment')" :disabled="DealSendingAttachmentBtnState">{{DealSendingAttachmentBtnText}}</el-button>
@@ -653,7 +653,7 @@
             </el-select>
           </el-col>
           <el-col :span="2">
-            <el-button size="small" type="primary">输出</el-button>
+            <el-button size="small" type="primary" @click="SubmitOldNoWater" :disabled="OldNoWaterBtnState">{{OldNoWaterBtnText}}</el-button>
           </el-col>
         </el-row>
         <el-row :gutter="20" v-show="IsOldVideoQuery">
@@ -665,7 +665,7 @@
             固定1280x720加中经视频水印
           </el-col>
           <el-col :span="2">
-            <el-button size="small" type="primary">输出</el-button>
+            <el-button size="small" type="primary" @click="SubmitOldWithWater" :disabled="OldWithWaterBtnState">{{OldWithWaterBtnText}}</el-button>
           </el-col>
         </el-row>
         <el-row :gutter="20" v-show="IsOldVideoQuery">
@@ -684,7 +684,7 @@
             </el-switch>
           </el-col>
           <el-col :span="2">
-            <el-button size="small" type="primary">分派辅助制作</el-button>
+            <el-button size="small" type="primary" @click="SubmitOldHelp" :disabled="OldHelpBtnState">{{OldHelpBtnText}}</el-button>
           </el-col>
         </el-row>
       </el-card>
@@ -914,6 +914,12 @@
         HelpVideoCount:0,
         WithWaterVideoCount:0,
         NoWaterVideoCount:0,
+        OldNoWaterBtnText:'输出',
+        OldNoWaterBtnState:false,
+        OldWithWaterBtnText:'输出',
+        OldWithWaterBtnState:false,
+        OldHelpBtnText:'输出',
+        OldHelpBtnState:false,
 
         /*导入视频变量*/
         dialogImportVideoVisible:false,
@@ -1128,8 +1134,9 @@
             }
             //mode
             if(mode==="browse" && projectId){
-              console.log("hit");
-              that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
+              //console.log("hit");
+              //that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
+              that.$http.get('http://192.168.194.88:667/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
                 var workFormInfo = res.data;
                 //List Data
                 workFormInfo.CourseData.forEach(function (item) {
@@ -1139,6 +1146,10 @@
                     that.tableDataOld.push(item);
                   }
                 });
+                var OldDataMode = Request["olddata"]
+                if (OldDataMode==='help'){
+                  that.tableDataOld=workFormInfo.HelpCourseData;
+                }
               }).catch(function (err) {
                 console.log(err);
               });
@@ -2502,6 +2513,145 @@
           this.HelpVideoCount=getJsonLength(this.OldNoVideoFilterList);
           this.OldVideoHelpList=this.OldNoVideoFilterList;
         }
+      },
+      SubmitOldNoWater(){
+        var that = this;
+          var SubmitList = [];
+          this.OldNoWaterFilterList.forEach(function (item) {
+            SubmitList.push({"id": item.CourseId, "title": item.title, "type": item.TempletType});
+          });
+          var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
+          var extendedData = {
+            "DisplaySize": that.dealOldWorkFormRatio,
+            "WaterMark": that.dealOldWorkIsWaterMark,
+            "CourseList": SubmitList
+          };
+          extendedData = JSON.stringify(extendedData);
+          var dealNote = "无";
+          if (that.dealOldWorkFormNote) {
+            dealNote = that.dealOldWorkFormNote;
+          }
+          this.$axios({
+            method: 'post',
+            url: myDealWorkFormTokenUrl,
+            headers: {'Authorization': 'JWT ' + that.myToken},
+            data: {
+              "TaskType": "OldCourseDownload",
+              "TaskNote": that.showFormWorkId + '_' + that.showFormWorkCustomerName + '_旧课无水印视频_' + dealNote,
+              "ExtendedData": extendedData,
+              "course": null,
+              "customer": that.showFormWorkCustomerId,
+            }
+          }).then(function (res) {
+            console.log(res);
+            if (res.status == 201) {
+              that.$message({
+                type: 'success',
+                message: '任务已添加'
+              });
+              that.OldNoWaterBtnState = true;
+              that.OldNoWaterBtnText = '任务已添加';
+            } else if (res.status == 204) {
+              that.$message({
+                type: 'warning',
+                message: '重复操作'
+              });
+              //that.dialogWorkFormVisible = false;
+            }
+          }).catch(function (err) {
+            that.$message({
+              type: 'warning',
+              message: '错误！'
+            });
+            console.log(err);
+          });
+      },
+      SubmitOldWithWater(){
+        var that = this;
+        var SubmitList = [];
+        this.OldWithWaterFilterList.forEach(function (item) {
+          SubmitList.push({"id": item.CourseId, "title": item.title, "type": item.TempletType});
+        });
+        var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
+        var extendedData = {
+          "DisplaySize": '1280*720',
+          "WaterMark": '',
+          "CourseList": SubmitList
+        };
+        extendedData = JSON.stringify(extendedData);
+        var dealNote = "无";
+        if (that.dealOldWorkFormNote) {
+          dealNote = that.dealOldWorkFormNote;
+        }
+        this.$axios({
+          method: 'post',
+          url: myDealWorkFormTokenUrl,
+          headers: {'Authorization': 'JWT ' + that.myToken},
+          data: {
+            "TaskType": "OldCourseDownload",
+            "TaskNote": that.showFormWorkId + '_' + that.showFormWorkCustomerName + '_旧课固定水印视频_' + dealNote,
+            "ExtendedData": extendedData,
+            "course": null,
+            "customer": that.showFormWorkCustomerId,
+          }
+        }).then(function (res) {
+          console.log(res);
+          if (res.status == 201) {
+            that.$message({
+              type: 'success',
+              message: '任务已添加'
+            });
+            that.OldWithWaterBtnState = true;
+            that.OldWithWaterBtnText = '任务已添加';
+          } else if (res.status == 204) {
+            that.$message({
+              type: 'warning',
+              message: '重复操作'
+            });
+            //that.dialogWorkFormVisible = false;
+          }
+        }).catch(function (err) {
+          that.$message({
+            type: 'warning',
+            message: '错误！'
+          });
+          console.log(err);
+        });
+      },
+      SubmitOldHelp(){
+        var that = this;
+        //var myDealWorkFormUrl = 'http://pms.cei.com.cn/InterFace/custom.ashx?method=UpdateSending';
+        var myDealWorkFormUrl = 'http://192.168.194.88:667/InterFace/custom.ashx?method=UpdateSending';
+        this.$axios({
+          method: 'post',
+          url: myDealWorkFormUrl,
+          data: {
+            "id": that.showFormWorkId,
+            "type":'help',
+            "HelpCourseData":that.OldVideoHelpList
+          },
+          withCredentials: false
+        }).then(function (res) {
+          // console.log(res);
+          if (res.status == 200) {
+            that.$message({
+              type: 'success',
+              message: '处理成功！'
+            });
+            that.DealSendingHelpBtnState = true;
+            that.DealSendingHelpBtnText='已发送';
+            that.OldHelpBtnState=true;
+            that.OldHelpBtnText='任务已添加';
+          } else if (res.status == 204) {
+            that.$message({
+              type: 'warning',
+              message: ''
+            });
+            that.dialogWorkFormVisible = false;
+          }
+        }).catch(function (err) {
+          console.log(err);
+        })
       }
     }
   }
