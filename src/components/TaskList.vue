@@ -70,13 +70,30 @@
         prop="creator"
         label="创建人"
         width="120">
-      </el-table-column>Insert
+      </el-table-column>
       <el-table-column
         prop="TaskNote"
         label="说明"
         width="300">
       </el-table-column>
+      <el-table-column label="操作" width="100">
+        <template slot-scope="scope">
+          <el-button size="mini" v-show="(scope.row.TaskState=='Finished'?true:false)" @click="ShowRes(scope.row)">查看结果</el-button>
+        </template>
+      </el-table-column>
     </el-table>
+    <el-dialog :visible.sync="dialogLogVisible" class="new-course-config" width="1000">
+      <el-table :data="LogData" id="LogTable" max-height="800" :default-sort="{prop: 'id', order: 'ascending'}">
+        <el-table-column prop="id" label="编号" sortable>
+        </el-table-column>
+        <el-table-column prop="title" label="题目">
+        </el-table-column>
+        <el-table-column prop="type" label="操作类型" sortable>
+        </el-table-column>
+        <el-table-column prop="result" label="结果">
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
@@ -91,6 +108,7 @@
     },
     data() {
       return {
+        dialogLogVisible:false,
         //导航信息
         MenuIndex: 1,
         //用户
@@ -98,7 +116,8 @@
         MyToken:'',
         //数据
         OwnTask:[],
-        WaitingTask:[]
+        WaitingTask:[],
+        LogData:[]
       }
     },
     mounted(){
@@ -119,6 +138,10 @@
       getMenuIndexVal(index) {
         this.MenuIndex = index;
         //console.log(this.MenuIndex);
+      },
+      ShowRes(row){
+        this.LogData= JSON.parse(row.log);
+        this.dialogLogVisible=true;
       }
     }
   }

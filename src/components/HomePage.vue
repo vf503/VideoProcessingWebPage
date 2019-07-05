@@ -19,6 +19,7 @@
           <el-option label="不限发布状态" value="none"></el-option>
           <el-option label="已审核" value="made"></el-option>
           <el-option label="已发布" value="published"></el-option>
+          <el-option label="正在制作" value="making"></el-option>
         </el-select>
         <br/>
         <div style="margin-left: 20px;">
@@ -36,6 +37,7 @@
           <el-select v-model="publishType" style="width: 153px" placeholder="选择版面">
             <el-option label="不限发布版面" value="none"></el-option>
             <el-option label="党政版" value="dz"></el-option>
+            <el-option label="原始课件" value="source"></el-option>
           </el-select>
         </div>
         <span class="is-especial-class">是否定制课 :</span>
@@ -122,18 +124,21 @@
             <template slot-scope="scope">
               <!--<el-button size="mini" @click="handleRepeatDelete(scope.$index, scope.row)">删除</el-button>-->
               <el-tooltip class="item" effect="dark" content="查看" placement="bottom-start">
-                <i class="iconfont" @click="PlayCourse(scope.row)">&#xe63e;</i>
+                <i class="iconfont" @click="PlayCourse(scope.row)" v-show="publishType =='source'?false:true">&#xe63e;</i>
               </el-tooltip>
               <el-tooltip class="item" effect="dark" content="编辑" placement="bottom-start">
-                <i class="iconfont" @click="EditCourse(scope.row)" v-show="(scope.row.DataType =='旧课件'?false:true) && showEditBtn">&#xe60c;</i>
+                <i class="iconfont" @click="EditCourse(scope.row)" v-show="(scope.row.DataType =='旧课件'?false:true) && showEditBtn && (publishType =='source'?false:true)">&#xe60c;</i>
               </el-tooltip>
               <el-tooltip class="item" effect="dark" content="发布" placement="bottom-start">
                 <i class="iconfont" @click="courseFtpPublish(scope.row)"
-                   v-show="showBtns && (scope.row.DataType =='旧课件'?false:true)">&#xe674;</i>
+                   v-show="showBtns && (scope.row.DataType =='旧课件'?false:true) && (publishType =='source'?false:true)">&#xe674;</i>
               </el-tooltip>
               <el-tooltip class="item" effect="dark" content="撤销发布" placement="bottom-start">
                 <i class="iconfont" @click="courseFtpCancel(scope.row)"
-                   v-show="showBtns && (scope.row.DataType =='旧课件'?false:true) && (scope.row.progress == '已发布'?true:false)">&#xe605;</i>
+                   v-show="showBtns && (scope.row.DataType =='旧课件'?false:true) && (scope.row.progress == '已发布'?true:false) && (publishType =='source'?false:true)">&#xe605;</i>
+              </el-tooltip>
+              <el-tooltip class="item" effect="dark" content="查看图片" placement="bottom-start">
+                <i class="iconfont" @click="PlayPic(scope.row)" v-show="publishType =='source'?true:false">&#xe63e;</i>
               </el-tooltip>
             </template>
           </el-table-column>
@@ -575,6 +580,27 @@
           </el-col>
         </el-row>
         <el-row :gutter="20">
+          <el-col :span="4">输出混剪视频:</el-col>
+          <el-col :span="6">
+            <el-radio v-model="dealWorkFormSlideVideo" label="0">不需要</el-radio>
+            <el-radio v-model="dealWorkFormSlideVideo" label="1">需要</el-radio>
+          </el-col>
+          <el-col :span="6">
+            <el-select v-model="dealWorkFormSlideVideoType" placeholder="请选择类型" disabled="true">
+              <el-option label="标准" value=""></el-option>
+              <el-option label="画中画" value="PIP"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="6">
+            <el-select v-model="dealWorkFormSlideVideoOP" placeholder="片头片尾" disabled="true">
+              <el-option label="标准" value=""></el-option>
+              <el-option label="只要片尾" value="OnlyED"></el-option>
+              <el-option label="只要片头" value="OnlyOP"></el-option>
+              <el-option label="无" value="none"></el-option>
+            </el-select>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
           <el-col :span="20">&nbsp;</el-col>
           <el-col :span="4">
             <el-button type="primary" @click="submitDealNew" :disabled="DealNewBtnState">{{DealNewBtnText}}</el-button>
@@ -710,7 +736,7 @@
         <el-col :span="3">是否有水印:</el-col>
         <el-col :span="20">
           <el-radio v-model="ImportVideoWaterMark" label="true">是</el-radio>
-          <el-radio v-model="ImportVideoWaterMark" label="false">否</el-radio>
+          <el-radio v-model="ImportVideoWaterMark" label="">否</el-radio>
         </el-col>
       </el-row>
       <el-row :gutter="20">
@@ -920,6 +946,9 @@
         OldWithWaterBtnState:false,
         OldHelpBtnText:'输出',
         OldHelpBtnState:false,
+        dealWorkFormSlideVideo: "0",
+        dealWorkFormSlideVideoType:'',
+        dealWorkFormSlideVideoOP:'',
 
         /*导入视频变量*/
         dialogImportVideoVisible:false,
@@ -1135,8 +1164,8 @@
             //mode
             if(mode==="browse" && projectId){
               //console.log("hit");
-              //that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
-              that.$http.get('http://192.168.194.88:667/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
+              that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
+              //that.$http.get('http://192.168.194.88:667/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
                 var workFormInfo = res.data;
                 //List Data
                 workFormInfo.CourseData.forEach(function (item) {
@@ -1376,7 +1405,12 @@
                 item.DataType = "新课件";
                 that.allTableData.push(item);
               });
-
+              if (that.publishType=="source")
+              {
+                that.loadingAll = false;
+                that.reShowTable();
+                return;
+              }
               that.$http.get(urlOld, {headers: {'Authorization': 'JWT ' + that.myToken}})
                 .then(function (response) {
                   // console.log(response);
@@ -1892,6 +1926,7 @@
           //新课无DataType
           if (item.DataType == null) {
             if (that.newCourseIds.indexOf(item.CourseId) < 0) {
+              item.DataType = "新课件";
               that.tableDataNew.push(item);
               that.newCourseIds.push(item.CourseId);
             } else {
@@ -1933,7 +1968,15 @@
           window.open('http://lms.cei.cn/doc/' + row.CourseId + '/');
         }
       },
-
+      PlayPic(row) {
+        if (row.DataType == '新课件') {
+          //console.log(row.SourceCourseId);
+          window.open('http://203.207.118.112/CourseFile/'+row.CourseId.slice(0,4)+'/' + row.CourseId + '/raw.jpg');
+        }
+        else if (row.DataType == '旧课件') {
+          window.open('http://lms.cei.cn/doc/' + row.CourseId + '/');
+        }
+      },
       //
       EditCourse(row) {
           var login = encodeURIComponent(this.encode64(this.userName+'_'+this.userPassword));
@@ -2136,6 +2179,17 @@
           }
         });
         var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
+        var dealNote="无";
+        if(that.dealWorkFormNote){
+          dealNote=that.dealWorkFormNote;
+        }
+        var TaskPriority="A";
+        var SlideVideo=false;
+        if (that.dealWorkFormSlideVideo=="1")
+        {
+          SlideVideo=true;
+          TaskPriority="D";
+        }
         var extendedData = {
           "template": that.dealWorkFormModel,
           "DisplaySize": that.dealWorkFormRatio,
@@ -2145,19 +2199,19 @@
           "AttPPT":IsInArray(that.dealWorkAttachmentList,'ppt'),
           "AttTest":IsInArray(that.dealWorkAttachmentList,'test'),
           "AttSummary":IsInArray(that.dealWorkAttachmentList,'summary'),
-          "AttLecturer":IsInArray(that.dealWorkAttachmentList,'lecturer')
+          "AttLecturer":IsInArray(that.dealWorkAttachmentList,'lecturer'),
+          "SlideVideo":SlideVideo,
+          "SlideVideoType":that.dealWorkFormSlideVideoType,
+          "SlideVideoOP":that.dealWorkFormSlideVideoOP
         };
         extendedData = JSON.stringify(extendedData);
-        var dealNote="无";
-        if(that.dealWorkFormNote){
-          dealNote=that.dealWorkFormNote;
-        }
         this.$axios({
           method: 'post',
           url: myDealWorkFormTokenUrl,
           headers: {'Authorization': 'JWT ' + that.myToken},
           data: {
             "TaskType": "CourseDownload",
+            "TaskPriority":TaskPriority,
             "TaskNote": that.showFormWorkId+'_'+that.showFormWorkCustomerName+'_新课_'+dealNote,
             "ExtendedData": extendedData,
             "course": showFormWorkAllCourseDataIds,
@@ -2207,7 +2261,7 @@
           var extendedData = {
             "template": that.oldTemplateVal,
             "template2012": that.oldTemplate2012Val,
-            "DisplaySize": that.dealOldWorkFormRatio,
+            "DisplaySize": '',
             "WaterMark": that.dealOldWorkIsWaterMark,
             "rename": that.dealOldWorkFormRename,
             "AttText": IsInArray(that.dealOldWorkAttachmentList, 'text'),
@@ -2575,7 +2629,7 @@
         var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
         var extendedData = {
           "DisplaySize": '1280*720',
-          "WaterMark": '',
+          "WaterMark": 'none',
           "CourseList": SubmitList
         };
         extendedData = JSON.stringify(extendedData);
@@ -2620,8 +2674,8 @@
       },
       SubmitOldHelp(){
         var that = this;
-        //var myDealWorkFormUrl = 'http://pms.cei.com.cn/InterFace/custom.ashx?method=UpdateSending';
-        var myDealWorkFormUrl = 'http://192.168.194.88:667/InterFace/custom.ashx?method=UpdateSending';
+        var myDealWorkFormUrl = 'http://pms.cei.com.cn/InterFace/custom.ashx?method=UpdateSending';
+        //var myDealWorkFormUrl = 'http://192.168.194.88:667/InterFace/custom.ashx?method=UpdateSending';
         this.$axios({
           method: 'post',
           url: myDealWorkFormUrl,
