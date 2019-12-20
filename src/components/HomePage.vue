@@ -138,7 +138,10 @@
                    v-show="showBtns && (scope.row.DataType =='旧课件'?false:true) && (scope.row.progress == '已发布'?true:false) && (publishType =='source'?false:true)">&#xe605;</i>
               </el-tooltip>
               <el-tooltip class="item" effect="dark" content="查看图片" placement="bottom-start">
-                <i class="iconfont" @click="PlayPic(scope.row)" v-show="publishType =='source'?true:false">&#xe63e;</i>
+              <i class="iconfont" @click="PlayPic(scope.row)" v-show="publishType =='source'?true:false">&#xe63e;</i>
+            </el-tooltip>
+              <el-tooltip class="item" effect="dark" content="查看视频" placement="bottom-start">
+                <i class="iconfont" @click="PlayVideo(scope.row)" v-show="publishType =='source'?true:false">&#xe674;</i>
               </el-tooltip>
             </template>
           </el-table-column>
@@ -313,14 +316,21 @@
         </el-col>
       </el-row>
       <el-row :gutter="20">
-        <el-col :span="3">用户信息:</el-col>
-        <el-col :span="14">
+        <el-col :span="3">最终用户信息:</el-col>
+        <el-col :span="8">
           <el-select v-model="newWorkCustomerId" filterable placeholder="选择客户(可输入搜索)">
             <el-option v-for="item in CustomerList" :label="item.name" :value="item.id"
                        :key="item.id"></el-option>
           </el-select>
         </el-col>
-        <el-col :span="4">
+        <el-col :span="3">签约用户信息（可留空）:</el-col>
+        <el-col :span="7">
+          <el-select v-model="newWorkMidCustomerId" filterable placeholder="选择客户(可输入搜索)">
+            <el-option v-for="item in CustomerList" :label="item.name" :value="item.id"
+                       :key="item.id"></el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="2">
           <el-button type="primary" size="mini" @click="ShowAddCustomer=true">新建客户</el-button>
         </el-col>
       </el-row>
@@ -338,6 +348,12 @@
           <el-option label="学校系统" value="学校系统"></el-option>
           <el-option label="企业系统" value="企业系统"></el-option>
         </el-select>
+        </el-col>
+        <el-col :span="4">
+          <el-select v-model="AddCustomerTypeExt" placeholder="请选择分类">
+            <el-option label="普通" value="普通"></el-option>
+            <el-option label="第三方" value="第三方"></el-option>
+          </el-select>
         </el-col>
         <el-col :span="4">
           <el-button type="primary" size="mini" @click="submitAddCustomer" :disabled="AddCustomerBtnState">{{ AddCustomerBtnText }}</el-button>
@@ -504,6 +520,9 @@
         <el-row :gutter="20">
           <el-col :span="6">
             <el-button type="primary" @click="submitSendingProject('help')" disabled>{{DealSendingHelpBtnText}}</el-button>
+          </el-col>
+          <el-col :span="6">
+            <el-button type="primary" @click="submitSendingProject('mchelp')" :disabled="DealSendingMcHelpBtnState">{{DealSendingMcHelpBtnText}}</el-button>
           </el-col>
           <el-col :span="6">
             <el-button type="primary" @click="submitSendingProject('attachment')" :disabled="DealSendingAttachmentBtnState">{{DealSendingAttachmentBtnText}}</el-button>
@@ -709,8 +728,23 @@
             <el-switch v-model="IsHelpWaterMark" @change="SwitchHelpVideoList">
             </el-switch>
           </el-col>
+          <el-col :span="4">
+            包括全部
+          </el-col>
+          <el-col :span="2">
+            <el-switch v-model="IsHelpAll" @change="SwitchHelpVideoListAll">
+            </el-switch>
+          </el-col>
           <el-col :span="2">
             <el-button size="small" type="primary" @click="SubmitOldHelp" :disabled="OldHelpBtnState">{{OldHelpBtnText}}</el-button>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20" v-show="IsOldVideoQuery">
+          <el-col :span="2">
+            <el-button size="mini" type="primary" round @click="ShowOldHelpCount">{{ OldHelpQueryCount }}</el-button>
+          </el-col>
+          <el-col :span="2">
+            <el-button size="small" type="primary" @click="SubmitOldHelpQuery" :disabled="OldHelpBtnState">{{OldHelpQueryBtnText}}</el-button>
           </el-col>
         </el-row>
       </el-card>
@@ -877,10 +911,12 @@
         newWorkAttachmentList:[],
         CustomerList:[],
         newWorkCustomerId: '',
+        newWorkMidCustomerId: '',
         /*新建工单-新建用户*/
         ShowAddCustomer:false,
         AddCustomerName:'',
         AddCustomerType:'',
+        AddCustomerTypeExt:'',
         AddCustomerBtnState:false,
         AddCustomerBtnText:'提交',
 
@@ -894,6 +930,8 @@
         DealProjectBtnText:'工单完成',
         DealSendingHelpBtnState:true,
         DealSendingHelpBtnText:'分派辅助制作',
+        DealSendingMcHelpBtnState:true,
+        DealSendingMcHelpBtnText:'分派微课制作',
         DealSendingTemplateBtnState:true,
         DealSendingTemplateBtnText:'分派模板制作',
         DealSendingPicBtnState:true,
@@ -937,6 +975,7 @@
         OldVideoTableData:[],
         dialogOldVideoListVisible:false,
         IsHelpWaterMark:false,
+        IsHelpAll:false,
         HelpVideoCount:0,
         WithWaterVideoCount:0,
         NoWaterVideoCount:0,
@@ -949,6 +988,10 @@
         dealWorkFormSlideVideo: "0",
         dealWorkFormSlideVideoType:'',
         dealWorkFormSlideVideoOP:'',
+        OldHelpQueryBtnText:'查询发送结果',
+        OldHelpQueryCount:0,
+        OldHelpQueryData:[],
+
 
         /*导入视频变量*/
         dialogImportVideoVisible:false,
@@ -1057,6 +1100,18 @@
                   if (workFormInfo.HelperFinishDate != "")
                   {
                     that.DealSendingHelpBtnText="辅助制作已完成";
+                  }
+                  //
+                  if (workFormInfo.McHelpSendingDate == "")
+                  {
+                    that.DealSendingMcHelpBtnState=false;
+                  }
+                  else{
+                    that.DealSendingMcHelpBtnText="微课正在制作";
+                  }
+                  if (workFormInfo.McHelperFinishDate != "")
+                  {
+                    that.DealSendingMcHelpBtnText="微课制作已完成";
                   }
                   //
                   if (workFormInfo.TemplateSendingDate == "")
@@ -1977,6 +2032,15 @@
           window.open('http://lms.cei.cn/doc/' + row.CourseId + '/');
         }
       },
+      PlayVideo(row) {
+        if (row.DataType == '新课件') {
+          //console.log(row.SourceCourseId);
+          window.open('http://203.207.118.112/CourseFile/'+row.CourseId.slice(0,4)+'/' + row.CourseId + '/raw.mp4');
+        }
+        else if (row.DataType == '旧课件') {
+          window.open('http://lms.cei.cn/doc/' + row.CourseId + '/');
+        }
+      },
       //
       EditCourse(row) {
           var login = encodeURIComponent(this.encode64(this.userName+'_'+this.userPassword));
@@ -2117,6 +2181,7 @@
             "id": that.newWorkFormId,
             "custom":  that.CustomerList.filter((t) => { return t.id == that.newWorkCustomerId })[0].name,
             "CustomerId":that.newWorkCustomerId,
+            "MidCustomerId":that.newWorkMidCustomerId,
             "user": this.userName,
             "DeadLine":this.newWorkDeadLine,
             "note": that.newWorkFormNote,
@@ -2422,6 +2487,11 @@
               that.DealSendingHelpBtnState = true;
               that.DealSendingHelpBtnText='已发送';
             }
+            if (type == "mchelp")
+            {
+              that.DealSendingMcHelpBtnState = true;
+              that.DealSendingMcHelpBtnText='已发送';
+            }
             else if (type == "pic")
             {
               that.DealSendingPicBtnState = true;
@@ -2458,6 +2528,7 @@
           data: {
             "name": that.AddCustomerName,
             "sort":that.AddCustomerType,
+            "sortExt":that.AddCustomerTypeExt,
             "area":that.userArea
           }
         }).then(function (res) {
@@ -2473,6 +2544,7 @@
             var getCustomerUrl = 'http://newpms.cei.cn/customer/';
             that.$http.get(getCustomerUrl).then(function (res) {
               that.CustomerList = res.data.filter((t) => { return t.area == 'n' })
+
             }).catch(function (err) {
               console.log(err);
             })
@@ -2559,9 +2631,21 @@
       },
       SwitchHelpVideoList(){
         //console.log(this.IsHelpWaterMark);
-        if(this.IsHelpWaterMark){
+        if(this.IsHelpWaterMark && !this.IsHelpAll){
           this.HelpVideoCount=getJsonLength(this.OldNoVideoFilterList)+getJsonLength(this.OldWithWaterFilterList);
           this.OldVideoHelpList=this.OldNoVideoFilterList.concat(this.OldWithWaterFilterList);
+        }
+        else if (!this.IsHelpWaterMark && !this.IsHelpAll)
+        {
+          this.HelpVideoCount=getJsonLength(this.OldNoVideoFilterList);
+          this.OldVideoHelpList=this.OldNoVideoFilterList;
+        }
+      },
+      SwitchHelpVideoListAll(){
+        //console.log(this.IsHelpWaterMark);
+        if(this.IsHelpAll){
+          this.HelpVideoCount=getJsonLength(this.OldNoVideoFilterList)+getJsonLength(this.OldWithWaterFilterList)+getJsonLength(this.OldNoWaterFilterList);
+          this.OldVideoHelpList=this.OldNoVideoFilterList.concat(this.OldWithWaterFilterList).concat(this.OldNoWaterFilterList);
         }
         else{
           this.HelpVideoCount=getJsonLength(this.OldNoVideoFilterList);
@@ -2706,6 +2790,44 @@
         }).catch(function (err) {
           console.log(err);
         })
+      },
+      SubmitOldHelpQuery(){
+        var that = this;
+        var url = 'http://pms.cei.com.cn/InterFace/custom.ashx?method=OldHelpQuery';
+        this.$axios({
+          method: 'get',
+          url: url,
+          params: {
+            id: that.showFormWorkId
+                  },
+          withCredentials:false
+        }).then(function (res) {
+          console.log(res);
+          if (res.status == 200) {
+            that.$message({
+              type: 'success',
+              message: '查询成功'
+            });
+            that.OldHelpQueryData=res.data.HelpCourseData;
+            that.OldHelpQueryCount=res.data.HelpCourseData.length;
+          } else if (res.status == 204) {
+            that.$message({
+              type: 'warning',
+              message: ''
+            });
+            //that.dialogWorkFormVisible = false;
+          }
+        }).catch(function (err) {
+          that.$message({
+            type: 'warning',
+            message: '错误！'
+          });
+          console.log(err);
+        });
+      },
+      ShowOldHelpCount(){
+        this.OldVideoTableData=this.OldHelpQueryData;
+        this.dialogOldVideoListVisible=true;
       }
     }
   }
