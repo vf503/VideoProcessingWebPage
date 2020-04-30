@@ -17,9 +17,8 @@
         </el-select>
         <el-select v-model="courseState" style="width: 153px" placeholder="选择状态">
           <el-option label="不限发布状态" value="none"></el-option>
-          <el-option label="已审核" value="made"></el-option>
           <el-option label="已发布" value="published"></el-option>
-          <el-option label="正在制作" value="making"></el-option>
+          <el-option label="未发布" value="made"></el-option>
         </el-select>
         <br/>
         <div style="margin-left: 20px;">
@@ -371,6 +370,25 @@
         </el-col>
       </el-row>
       <el-row :gutter="20">
+        <el-col :span="3">混剪MP4:</el-col>
+        <el-col :span="4">
+          <el-select v-model="newWorkFormSlideVideo"  placeholder="请选择">
+            <el-option label="不需要" value="none"></el-option>
+            <el-option label="1280*720" value="1280*720"></el-option>
+            <el-option label="720*576" value="720*576"></el-option>
+            <el-option label="640*360" value="640*360"></el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="4">
+          <el-select v-model="newWorkFormSlideVideoOP" placeholder="片头片尾">
+            <el-option label="有片头片尾" value=""></el-option>
+            <el-option label="无片头片尾" value="none"></el-option>
+            <!--<el-option label="只要片尾" value="OnlyED"></el-option>
+                <el-option label="只要片头" value="OnlyOP"></el-option>-->
+          </el-select>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
         <el-col :span="3">输出视频:</el-col>
         <el-col :span="4">
           <el-select v-model="newWorkFormRatio" @change="handleRatioCommand" placeholder="请选择分辨率">
@@ -561,6 +579,31 @@
           </el-col>
         </el-row>
         <el-row :gutter="20">
+          <el-col :span="4">混剪MP4:</el-col>
+          <el-col :span="8">
+            <el-select v-model="dealWorkFormSlideVideo" placeholder="请选择类型">
+              <el-option label="不需要" value="none"></el-option>
+              <el-option label="1280*720" value="1280*720"></el-option>
+              <el-option label="720*576" value="720*576"></el-option>
+              <el-option label="640*360" value="640*360"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="6">
+            <el-select v-model="dealWorkFormSlideVideoOP" placeholder="片头片尾">
+              <el-option label="有片头片尾" value=""></el-option>
+              <el-option label="无片头片尾" value="none"></el-option>
+              <!--<el-option label="只要片尾" value="OnlyED"></el-option>
+                  <el-option label="只要片头" value="OnlyOP"></el-option>-->
+            </el-select>
+          </el-col>
+          <el-col :span="6">
+            <el-select v-model="dealWorkFormSlideVideoType" placeholder="请选择类型" disabled="true">
+              <el-option label="标准" value=""></el-option>
+              <el-option label="画中画" value="PIP"></el-option>
+            </el-select>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
           <el-col :span="4">输出视频:</el-col>
           <el-col :span="8">
             <el-select v-model="dealWorkFormRatio" placeholder="请选择分辨率">
@@ -596,27 +639,6 @@
               <el-checkbox label="summary">简介</el-checkbox>
               <el-checkbox label="lecturer">教师简介</el-checkbox>
             </el-checkbox-group>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="4">输出混剪视频:</el-col>
-          <el-col :span="6">
-            <el-radio v-model="dealWorkFormSlideVideo" label="0">不需要</el-radio>
-            <el-radio v-model="dealWorkFormSlideVideo" label="1">需要</el-radio>
-          </el-col>
-          <el-col :span="6">
-            <el-select v-model="dealWorkFormSlideVideoType" placeholder="请选择类型" disabled="true">
-              <el-option label="标准" value=""></el-option>
-              <el-option label="画中画" value="PIP"></el-option>
-            </el-select>
-          </el-col>
-          <el-col :span="6">
-            <el-select v-model="dealWorkFormSlideVideoOP" placeholder="片头片尾" disabled="true">
-              <el-option label="标准" value=""></el-option>
-              <el-option label="只要片尾" value="OnlyED"></el-option>
-              <el-option label="只要片头" value="OnlyOP"></el-option>
-              <el-option label="无" value="none"></el-option>
-            </el-select>
           </el-col>
         </el-row>
         <el-row :gutter="20">
@@ -688,7 +710,9 @@
           <el-col :span="8">
             <el-select v-model="dealOldWorkFormRatio" placeholder="请选择分辨率">
               <el-option label="不需要" value=""></el-option>
-              <el-option label="1280*720" value="1280*720"></el-option>
+              <el-option label="1280*720 原片" value="1280*720"></el-option>
+              <el-option label="1280*720 2M" value="1280*720_2M"></el-option>
+              <el-option label="1280*720 1M" value="1280*720_1M"></el-option>
             </el-select>
           </el-col>
           <el-col :span="4">
@@ -794,8 +818,8 @@
     },
     data() {
       var DefaultEndDate = new Date();
-      var DefaultStartDate =new Date();
-      DefaultStartDate.setFullYear(DefaultStartDate.getFullYear()-2);
+      var DefaultStartDate = new Date();
+      DefaultStartDate.setFullYear(DefaultStartDate.getFullYear() - 2);
       return {
         //导航信息
         MenuIndex: 0,
@@ -805,7 +829,7 @@
         userState: '',
         userType: '',
         myToken: '',
-        userArea:'n',
+        userArea: 'n',
 
         /*Excel检索的变量*/
         fileList: [],
@@ -821,14 +845,14 @@
 
         /*手动检索的变量*/
         videoType: "",
-        courseState:"none",
-        publishType:"none",
+        courseState: "none",
+        publishType: "none",
         isEspecialClass: "",
         className: '',
         classGroup: "",
         classTeacher: '',
         classKeyword: '',
-        classDate:[DefaultStartDate,DefaultEndDate],
+        classDate: [DefaultStartDate, DefaultEndDate],
         RangePickerOptions: {
           shortcuts: [{
             text: '最近一周',
@@ -879,7 +903,7 @@
         showEditBtn: false,
         showCreateWorkForm: true,
         showDealWorkForm: false,
-        DealBtnText:"下载课件",
+        DealBtnText: "下载课件",
 
         /*用于base64转中文*/
         keyStr: "",
@@ -907,46 +931,48 @@
         newWorkFormBitRate: '',
         newWorkIsWaterMark: '不需要',
         newWorkDeadLine: '',
-        newWorkCourseChecked:false,
-        newWorkAttachmentList:[],
-        CustomerList:[],
+        newWorkCourseChecked: false,
+        newWorkAttachmentList: [],
+        CustomerList: [],
         newWorkCustomerId: '',
         newWorkMidCustomerId: '',
+        newWorkFormSlideVideo: 'none',
+        newWorkFormSlideVideoOP: 'none',
         /*新建工单-新建用户*/
-        ShowAddCustomer:false,
-        AddCustomerName:'',
-        AddCustomerType:'',
-        AddCustomerTypeExt:'',
-        AddCustomerBtnState:false,
-        AddCustomerBtnText:'提交',
+        ShowAddCustomer: false,
+        AddCustomerName: '',
+        AddCustomerType: '',
+        AddCustomerTypeExt: '',
+        AddCustomerBtnState: false,
+        AddCustomerBtnText: '提交',
 
         /*处理工单-展示工单的变量*/
-        DealProjectVisible:false,
-        DealNewBtnState:false,
-        DealNewBtnText:'确定下载',
-        DealOldBtnState:false,
-        DealOldBtnText:'确定下载',
-        DealProjectBtnState:true,
-        DealProjectBtnText:'工单完成',
-        DealSendingHelpBtnState:true,
-        DealSendingHelpBtnText:'分派辅助制作',
-        DealSendingMcHelpBtnState:true,
-        DealSendingMcHelpBtnText:'分派微课制作',
-        DealSendingTemplateBtnState:true,
-        DealSendingTemplateBtnText:'分派模板制作',
-        DealSendingPicBtnState:true,
-        DealSendingPicBtnText:'分派图片制作',
-        DealSendingAttachmentBtnState:true,
-        DealSendingAttachmentBtnText:'分派素材制作',
-        DealProjectOldVisible:false,
-        DealProjectNewVisible:false,
-        DealWorkFormTitle:'查看工单',
+        DealProjectVisible: false,
+        DealNewBtnState: false,
+        DealNewBtnText: '确定下载',
+        DealOldBtnState: false,
+        DealOldBtnText: '确定下载',
+        DealProjectBtnState: true,
+        DealProjectBtnText: '工单完成',
+        DealSendingHelpBtnState: true,
+        DealSendingHelpBtnText: '分派辅助制作',
+        DealSendingMcHelpBtnState: true,
+        DealSendingMcHelpBtnText: '分派微课制作',
+        DealSendingTemplateBtnState: true,
+        DealSendingTemplateBtnText: '分派模板制作',
+        DealSendingPicBtnState: true,
+        DealSendingPicBtnText: '分派图片制作',
+        DealSendingAttachmentBtnState: true,
+        DealSendingAttachmentBtnText: '分派素材制作',
+        DealProjectOldVisible: false,
+        DealProjectNewVisible: false,
+        DealWorkFormTitle: '查看工单',
         showFormWorkCreator: '',
         showFormWorkId: '',
         showFormWorkCustomerName: '',
-        showFormWorkCustomerId:'',
-        showFormWorkDeadLine:'',
-        showFormWorkRequire:'',
+        showFormWorkCustomerId: '',
+        showFormWorkDeadLine: '',
+        showFormWorkRequire: '',
         showFormWorkNote: '',
         showFormWorkCheckDate: '',
         showFormWorkCheckNote: '',
@@ -957,45 +983,45 @@
         dealWorkFormRatio: '',
         dealWorkFormNote: '',
         dealWorkFormRename: '1',
-        dealWorkAttachmentList:[],
-        dealWorkIsWaterMark:'zjsp',
-        dealOldWorkFormRename:'1',
-        dealOldWorkIsWaterMark:'',
-        dealOldWorkFormRatio:'',
-        dealOldWorkAttachmentList:[],
-        oldTemplate:[],
-        oldTemplateVal:'',
-        oldTemplate2012:[],
-        oldTemplate2012Val:'',
-        IsOldVideoQuery:false,
-        OldNoWaterFilterList:[],
-        OldWithWaterFilterList:[],
-        OldNoVideoFilterList:[],
-        OldVideoHelpList:[],
-        OldVideoTableData:[],
-        dialogOldVideoListVisible:false,
-        IsHelpWaterMark:false,
-        IsHelpAll:false,
-        HelpVideoCount:0,
-        WithWaterVideoCount:0,
-        NoWaterVideoCount:0,
-        OldNoWaterBtnText:'输出',
-        OldNoWaterBtnState:false,
-        OldWithWaterBtnText:'输出',
-        OldWithWaterBtnState:false,
-        OldHelpBtnText:'输出',
-        OldHelpBtnState:false,
-        dealWorkFormSlideVideo: "0",
-        dealWorkFormSlideVideoType:'',
-        dealWorkFormSlideVideoOP:'',
-        OldHelpQueryBtnText:'查询发送结果',
-        OldHelpQueryCount:0,
-        OldHelpQueryData:[],
+        dealWorkAttachmentList: [],
+        dealWorkIsWaterMark: 'zjsp',
+        dealOldWorkFormRename: '1',
+        dealOldWorkIsWaterMark: '',
+        dealOldWorkFormRatio: '',
+        dealOldWorkAttachmentList: [],
+        oldTemplate: [],
+        oldTemplateVal: '',
+        oldTemplate2012: [],
+        oldTemplate2012Val: '',
+        IsOldVideoQuery: false,
+        OldNoWaterFilterList: [],
+        OldWithWaterFilterList: [],
+        OldNoVideoFilterList: [],
+        OldVideoHelpList: [],
+        OldVideoTableData: [],
+        dialogOldVideoListVisible: false,
+        IsHelpWaterMark: false,
+        IsHelpAll: false,
+        HelpVideoCount: 0,
+        WithWaterVideoCount: 0,
+        NoWaterVideoCount: 0,
+        OldNoWaterBtnText: '输出',
+        OldNoWaterBtnState: false,
+        OldWithWaterBtnText: '输出',
+        OldWithWaterBtnState: false,
+        OldHelpBtnText: '输出',
+        OldHelpBtnState: false,
+        dealWorkFormSlideVideo: "none",
+        dealWorkFormSlideVideoType: '',
+        dealWorkFormSlideVideoOP: 'none',
+        OldHelpQueryBtnText: '查询发送结果',
+        OldHelpQueryCount: 0,
+        OldHelpQueryData: [],
 
 
         /*导入视频变量*/
-        dialogImportVideoVisible:false,
-        ImportVideoWaterMark:'true',
+        dialogImportVideoVisible: false,
+        ImportVideoWaterMark: 'true',
 
         /*从后台获取的供选择的模板信息*/
         videoModelForChoose: [],
@@ -1012,7 +1038,7 @@
         var Request2 = new Object();
         Request = this.getRequest();
         Request2 = this.getRequest2();
-        var mode =Request["mode"]
+        var mode = Request["mode"]
         this.keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         this.userState = Request2["mode"];
         var modeLogin = this.decode(Request["login"]);
@@ -1029,8 +1055,8 @@
           .then(function (response) {
             if (response.status == 200) {
               localStorage.setItem('mytoken', response.data.token);
-              localStorage.setItem('myusername',modeUserName);
-              localStorage.setItem('myuserpass',modePassword);
+              localStorage.setItem('myusername', modeUserName);
+              localStorage.setItem('myuserpass', modePassword);
               that.myToken = response.data.token;
               that.userName = modeUserName;
               //that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id=A-20180524-1').then(function (res) {
@@ -1050,152 +1076,154 @@
             localStorage.setItem('myusertype', response.data.group);
             that.userType = response.data.group;
             //角色
-            if (that.userType.search('manager;') != -1 )
-            {
+            if (that.userType.search('manager;') != -1) {
               that.showCreateWorkForm = true;
               that.showDealWorkForm = true;
-              that.DealProjectNewVisible=true;
-              that.DealProjectOldVisible=true;
+              that.DealProjectNewVisible = true;
+              that.DealProjectOldVisible = true;
             }
-            if (that.userType.search('SeniorWorker;') != -1 ) {
+            if (that.userType.search('SeniorWorker;') != -1) {
               that.showDealWorkForm = true;
               //that.showCreateWorkForm =false;
-              that.DealProjectNewVisible=true;
-              that.DealProjectOldVisible=true;
+              that.DealProjectNewVisible = true;
+              that.DealProjectOldVisible = true;
               //
-              that.$http.get('http://lms.cei.cn/lms/myproducer/templates2/index.txt',{withCredentials:false}).then(function (res) {
+              that.$http.get('http://lms.cei.cn/lms/myproducer/templates2/index.txt', {withCredentials: false}).then(function (res) {
                 // console.log(res);
                 that.oldTemplate = res.data.split("\r\n");
                 //console.log(res.data.replace(new RegExp(/(\r\n)/g),'_'))
               }).catch(function (err) {
                 console.log(err)
               })
-              that.$http.get('http://lms.cei.cn/lms/myproducer/templates2013/index.txt',{withCredentials:false}).then(function (res) {
+              that.$http.get('http://lms.cei.cn/lms/myproducer/templates2013/index.txt', {withCredentials: false}).then(function (res) {
                 // console.log(res);
                 that.oldTemplate2012 = res.data.split("\r\n");
               }).catch(function (err) {
                 console.log(err)
               })
               //
-              if(mode==="disposal" && projectId){
+              if (mode === "disposal" && projectId) {
                 that.dialogDealWorkFormVisible = true;
-                that.DealBtnText="处理工单";
-                that.DealWorkFormTitle='处理工单';
-                that.DealProjectVisible=true;
-                that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
+                that.DealBtnText = "处理工单";
+                that.DealWorkFormTitle = '处理工单';
+                that.DealProjectVisible = true;
+                that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id=' + projectId, {withCredentials: false}).then(function (res) {
                   var workFormInfo = res.data;
                   that.showFormWorkCreator = workFormInfo.user;
                   that.showFormWorkId = workFormInfo.id;
                   that.showFormWorkCustomerName = workFormInfo.custom
-                  that.showFormWorkCustomerId=workFormInfo.CustomerId
+                  that.showFormWorkCustomerId = workFormInfo.CustomerId
                   //操作状态
                   //
-                  if (workFormInfo.HelpSendingDate == "")
-                  {
-                    that.DealSendingHelpBtnState=false;
+                  if (workFormInfo.HelpSendingDate == "") {
+                    that.DealSendingHelpBtnState = false;
                   }
-                  else{
-                    that.DealSendingHelpBtnText="正在辅助制作";
+                  else {
+                    that.DealSendingHelpBtnText = "正在辅助制作";
                   }
-                  if (workFormInfo.HelperFinishDate != "")
-                  {
-                    that.DealSendingHelpBtnText="辅助制作已完成";
+                  if (workFormInfo.HelperFinishDate != "") {
+                    that.DealSendingHelpBtnText = "辅助制作已完成";
                   }
                   //
-                  if (workFormInfo.McHelpSendingDate == "")
-                  {
-                    that.DealSendingMcHelpBtnState=false;
+                  if (workFormInfo.McHelpSendingDate == "") {
+                    that.DealSendingMcHelpBtnState = false;
                   }
-                  else{
-                    that.DealSendingMcHelpBtnText="微课正在制作";
+                  else {
+                    that.DealSendingMcHelpBtnText = "微课正在制作";
                   }
-                  if (workFormInfo.McHelperFinishDate != "")
-                  {
-                    that.DealSendingMcHelpBtnText="微课制作已完成";
+                  if (workFormInfo.McHelperFinishDate != "") {
+                    that.DealSendingMcHelpBtnText = "微课制作已完成";
                   }
                   //
-                  if (workFormInfo.TemplateSendingDate == "")
-                  {
-                    that.DealSendingTemplateBtnState=false;
+                  if (workFormInfo.TemplateSendingDate == "") {
+                    that.DealSendingTemplateBtnState = false;
                   }
-                  else{
-                    that.DealSendingTemplateBtnText="模板正在制作";
+                  else {
+                    that.DealSendingTemplateBtnText = "模板正在制作";
                   }
-                  if (workFormInfo.TemplateFinishDate != "")
-                  {
-                    that.DealSendingTemplateBtnText="模板制作已完成";
+                  if (workFormInfo.TemplateFinishDate != "") {
+                    that.DealSendingTemplateBtnText = "模板制作已完成";
                   }
                   //
-                  if (workFormInfo.PicSendingDate == "")
-                  {
-                    that.DealSendingPicBtnState=false;
+                  if (workFormInfo.PicSendingDate == "") {
+                    that.DealSendingPicBtnState = false;
                   }
-                  else{
-                    that.DealSendingPicBtnText="图片正在制作";
+                  else {
+                    that.DealSendingPicBtnText = "图片正在制作";
                   }
-                  if (workFormInfo.PicFinishDate != "")
-                  {
-                    that.DealSendingPicBtnText="图片制作已完成";
+                  if (workFormInfo.PicFinishDate != "") {
+                    that.DealSendingPicBtnText = "图片制作已完成";
                   }
                   //
-                  if (workFormInfo.AttachmentSendingDate == "")
-                  {
-                    that.DealSendingAttachmentBtnState=false;
+                  if (workFormInfo.AttachmentSendingDate == "") {
+                    that.DealSendingAttachmentBtnState = false;
                   }
-                  else{
-                    that.DealSendingAttachmentBtnText="素材正在制作";
+                  else {
+                    that.DealSendingAttachmentBtnText = "素材正在制作";
                   }
-                  if (workFormInfo.AttachmentFinishDate != "")
-                  {
-                    that.DealSendingAttachmentBtnText="素材制作已完成";
+                  if (workFormInfo.AttachmentFinishDate != "") {
+                    that.DealSendingAttachmentBtnText = "素材制作已完成";
                   }
                   //
-                  if (workFormInfo.FinishDate != "")
-                  {
-                    that.DealProjectBtnText="工单已完成";
+                  if (workFormInfo.FinishDate != "") {
+                    that.DealProjectBtnText = "工单已完成";
                   }
-                  if (workFormInfo.FinishDate == "" && (workFormInfo.HelpSendingDate=="" || workFormInfo.HelperFinishDate != "") && (workFormInfo.AttachmentSendingDate=="" || workFormInfo.AttachmentFinishDate != "")
-                    && (workFormInfo.TemplateSendingDate=="" || workFormInfo.TemplateFinishDate != "")  && (workFormInfo.PicSendingDate=="" || workFormInfo.PicFinishDate != ""))
-                  {
-                    that.DealProjectBtnState=false;
+                  if (workFormInfo.FinishDate == "" && (workFormInfo.HelpSendingDate == "" || workFormInfo.HelperFinishDate != "") && (workFormInfo.AttachmentSendingDate == "" || workFormInfo.AttachmentFinishDate != "")
+                    && (workFormInfo.TemplateSendingDate == "" || workFormInfo.TemplateFinishDate != "") && (workFormInfo.PicSendingDate == "" || workFormInfo.PicFinishDate != "")) {
+                    that.DealProjectBtnState = false;
                   }
                   //任务要求
-                  if (workFormInfo.require.template != "")
-                  {
-                    if (workFormInfo.require.template == 0)
-                    {
-                      that.showFormWorkRequire +=  "模板：未指定\n\r";
+                  if (workFormInfo.require.template != "") {
+                    if (workFormInfo.require.template == 0) {
+                      that.showFormWorkRequire += "模板：未指定\n\r";
                     }
-                    else{
-                      var ThisTemplate = that.videoModelForChoose.filter((t) => { return t.id == workFormInfo.require.template; });
-                      that.showFormWorkRequire +=  "模板：" + ThisTemplate[0].name + "\n\r";
+                    else {
+                      var ThisTemplate = that.videoModelForChoose.filter((t) => {
+                        return t.id == workFormInfo.require.template;
+                      });
+                      that.showFormWorkRequire += "模板：" + ThisTemplate[0].name + "\n\r";
                     }
                   }
                   else {
-                    that.showFormWorkRequire +=  "不需要下载课件\n\r";
+                    that.showFormWorkRequire += "不需要下载课件\n\r";
                   }
-                  if ( workFormInfo.require.DisplaySize==="")
-                  {
-                    that.showFormWorkRequire+="不需要输出视频\n\r"
+                  if (typeof(workFormInfo.require.SlideVideo) != "undefined" && workFormInfo.require.SlideVideo != "none") {
+                    that.showFormWorkRequire += "混剪MP4：需要;" + workFormInfo.require.SlideVideo + ";";
+                    if(typeof(workFormInfo.require.SlideVideoOP) === "undefined")
+                    {
+                      that.showFormWorkRequire +="有片头片尾;\n\r";
+                    }
+                    else if(workFormInfo.require.SlideVideoOP==="")
+                    {
+                      that.showFormWorkRequire +="有片头片尾;\n\r";
+                    }
+                    else if(workFormInfo.require.SlideVideoOP==="none")
+                    {
+                      that.showFormWorkRequire +="无片头片尾;\n\r";
+                    }
+                    else{}
                   }
-                  else{
+                  if (workFormInfo.require.DisplaySize === "") {
+                    that.showFormWorkRequire += "不需要输出视频\n\r"
+                  }
+                  else {
                     that.showFormWorkRequire += "输出分辨率：" + workFormInfo.require.DisplaySize + " ; ";
-                    workFormInfo.require.BitRate === "" ? that.showFormWorkRequire+="码率：未指定 ; " : that.showFormWorkRequire += "码率：" + workFormInfo.require.BitRate + "K ; ";
-                    that.showFormWorkRequire +="水印：";
-                    that.showFormWorkRequire +=workFormInfo.require.IsWaterMark+"\n\r";
+                    workFormInfo.require.BitRate === "" ? that.showFormWorkRequire += "码率：未指定 ; " : that.showFormWorkRequire += "码率：" + workFormInfo.require.BitRate + "K ; ";
+                    that.showFormWorkRequire += "水印：";
+                    that.showFormWorkRequire += workFormInfo.require.IsWaterMark + "\n\r";
                   }
                   workFormInfo.require.IsPic === "1" ? that.showFormWorkRequire += "做图：是 ; 要求：" + workFormInfo.require.PicNote + "\n\r" : that.showFormWorkRequire += "做图：否\n\r";
-                  workFormInfo.require.IsTemplate === "1" ? that.showFormWorkRequire += "做模板：是 ; 要求：" + workFormInfo.require.TemplateNote+"\n\r" : that.showFormWorkRequire += "做模板：否\n\r";
-                  that.showFormWorkRequire +="附件要求：";
-                  workFormInfo.require.AttText ==="true"? that.showFormWorkRequire += "全文、" : that.showFormWorkRequire += "";
-                  workFormInfo.require.AttPPT ==="true"? that.showFormWorkRequire += "PPT、" : that.showFormWorkRequire += "";
-                  workFormInfo.require.AttTest ==="true"? that.showFormWorkRequire += "考题、" : that.showFormWorkRequire += "";
-                  workFormInfo.require.AttSummary ==="true"? that.showFormWorkRequire += "简介、" : that.showFormWorkRequire += "";
-                  workFormInfo.require.AttLecturer ==="true"? that.showFormWorkRequire += "教师简介" : that.showFormWorkRequire += "";
-                    //that.showFormWorkModal = workFormInfo.require.template;
+                  workFormInfo.require.IsTemplate === "1" ? that.showFormWorkRequire += "做模板：是 ; 要求：" + workFormInfo.require.TemplateNote + "\n\r" : that.showFormWorkRequire += "做模板：否\n\r";
+                  that.showFormWorkRequire += "附件要求：";
+                  workFormInfo.require.AttText === "true" ? that.showFormWorkRequire += "全文、" : that.showFormWorkRequire += "";
+                  workFormInfo.require.AttPPT === "true" ? that.showFormWorkRequire += "PPT、" : that.showFormWorkRequire += "";
+                  workFormInfo.require.AttTest === "true" ? that.showFormWorkRequire += "考题、" : that.showFormWorkRequire += "";
+                  workFormInfo.require.AttSummary === "true" ? that.showFormWorkRequire += "简介、" : that.showFormWorkRequire += "";
+                  workFormInfo.require.AttLecturer === "true" ? that.showFormWorkRequire += "教师简介" : that.showFormWorkRequire += "";
+                  //that.showFormWorkModal = workFormInfo.require.template;
                   //that.showFormWorkRatio = workFormInfo.require.DisplaySize;
                   //
-                  that.showFormWorkDeadLine =  workFormInfo.DeadLine
+                  that.showFormWorkDeadLine = workFormInfo.DeadLine
                   that.showFormWorkNote = workFormInfo.note
                   that.showFormWorkCheckDate = workFormInfo.CheckDate
                   that.showFormWorkCheckNote = workFormInfo.CheckNote
@@ -1212,15 +1240,15 @@
                   console.log(err);
                 });
               }
-              else{
-                that.DealBtnText="下载";
+              else {
+                that.DealBtnText = "下载";
               }
             }
             //mode
-            if(mode==="browse" && projectId){
+            if (mode === "browse" && projectId) {
               //console.log("hit");
-              that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
-              //that.$http.get('http://192.168.194.88:667/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
+              that.$http.get('http://pms.cei.com.cn/InterFace/custom.ashx?method=get&id=' + projectId, {withCredentials: false}).then(function (res) {
+                //that.$http.get('http://192.168.194.88:667/InterFace/custom.ashx?method=get&id='+projectId,{withCredentials:false}).then(function (res) {
                 var workFormInfo = res.data;
                 //List Data
                 workFormInfo.CourseData.forEach(function (item) {
@@ -1231,8 +1259,8 @@
                   }
                 });
                 var OldDataMode = Request["olddata"]
-                if (OldDataMode==='help'){
-                  that.tableDataOld=workFormInfo.HelpCourseData;
+                if (OldDataMode === 'help') {
+                  that.tableDataOld = workFormInfo.HelpCourseData;
                 }
               }).catch(function (err) {
                 console.log(err);
@@ -1243,7 +1271,7 @@
             console.log(error);
           });
       }
-      else{
+      else {
         this.myToken = localStorage.getItem('mytoken');
       }
 
@@ -1259,20 +1287,24 @@
         var getCustomerUrl = 'http://newpms.cei.cn/customer/';
         this.$http.get(getCustomerUrl).then(function (res) {
           // console.log(res);
-          that.CustomerList = res.data.filter((t) => { return t.area == 'n' })
+          that.CustomerList = res.data.filter((t) => {
+            return t.area == 'n'
+          })
           //console.log(that.CustomerList)
         }).catch(function (err) {
           console.log(err);
         })
       }
-      if (this.userType.search('SouthSeller;') != -1 ){
+      if (this.userType.search('SouthSeller;') != -1) {
         console.log('hit2');
         that.showCreateWorkForm = true
         this.userArea = 's'
         var getCustomerUrl = 'http://newpms.cei.cn/customer/'
         this.$http.get(getCustomerUrl).then(function (res) {
           // console.log(res);
-          that.CustomerList = res.data.filter((t) => { return t.area == 's' })
+          that.CustomerList = res.data.filter((t) => {
+            return t.area == 's'
+          })
           console.log(that.CustomerList)
         }).catch(function (err) {
           console.log(err);
@@ -1281,10 +1313,10 @@
       if (that.userType.search('SeniorWorker;') != -1) {
         this.showDealWorkForm = true;
       }
-      if (that.userType.search('SeniorEditor;') != -1 ) {
+      if (that.userType.search('SeniorEditor;') != -1) {
         that.showEditBtn = true;
       }
-      if (that.userType.search('editor;') != -1 || that.userType.search('manager;') != -1 || that.userType.search('SeniorEditor;') != -1 ) {
+      if (that.userType.search('editor;') != -1 || that.userType.search('manager;') != -1 || that.userType.search('SeniorEditor;') != -1) {
         that.showBtns = true;
       }
       if (that.userType.search('SeniorWorker;') != -1 || that.userType.search('manager;') != -1 || that.userType.search('SeniorEditor;') != -1) {
@@ -1297,7 +1329,7 @@
         : nowDate.getMonth() + 1;
       var day = nowDate.getDate() < 10 ? "0" + nowDate.getDate() : nowDate
         .getDate();
-      this.newWorkFormNowDate = year.toString() + month.toString() + day.toString()   ;
+      this.newWorkFormNowDate = year.toString() + month.toString() + day.toString();
 
       //获取模板选项内容
       var getModelUrl = 'http://newpms.cei.cn/coursetemplet/';
@@ -1311,7 +1343,7 @@
     methods: {
       //appHead
       getMenuIndexVal(index) {
-        this.MenuIndex=index;
+        this.MenuIndex = index;
         //console.log(this.MenuIndex);
       },
       //获取url中的参数及其值
@@ -1390,13 +1422,13 @@
         return string;
       },
       _utf8_encode(string) {
-        string = string.replace(/\r\n/g,"\n");
+        string = string.replace(/\r\n/g, "\n");
         var utftext = "";
         for (var n = 0; n < string.length; n++) {
           var c = string.charCodeAt(n);
           if (c < 128) {
             utftext += String.fromCharCode(c);
-          } else if((c > 127) && (c < 2048)) {
+          } else if ((c > 127) && (c < 2048)) {
             utftext += String.fromCharCode((c >> 6) | 192);
             utftext += String.fromCharCode((c & 63) | 128);
           } else {
@@ -1444,24 +1476,36 @@
         var urlNew = "http://newpms.cei.cn/course/FieldQuery/" +
           "?title=" + encodeURIComponent(this.className) + "&lecturer=" + encodeURIComponent(this.classTeacher)
           + "&key=" + encodeURIComponent(this.classKeyword) + "&type=" + encodeURIComponent(this.videoType) + "&group=" + encodeURIComponent(this.classGroup)
-          + "&source=" + encodeURIComponent(this.isEspecialClass) + "&start="+encodeURIComponent(this.classDate[0].Format("yyyy-MM-dd HH:mm:ss"))
-          + "&end="+encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet="+encodeURIComponent(this.publishType) + "&area=" + encodeURIComponent(this.userArea);
+          + "&source=" + encodeURIComponent(this.isEspecialClass) + "&start=" + encodeURIComponent(this.classDate[0].Format("yyyy-MM-dd HH:mm:ss"))
+          + "&end=" + encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet=" + encodeURIComponent(this.publishType) + "&area=" + encodeURIComponent(this.userArea);
         // console.log(urlNew);
         var urlOld = "http://newpms.cei.cn/OldCourseQuery/" +
           "?title=" + encodeURIComponent(this.className) + "&lecturer=" + encodeURIComponent(this.classTeacher) +
           "&key=" + encodeURIComponent(this.classKeyword) + "&type=" + encodeURIComponent(this.videoType) + "&group=" + encodeURIComponent(this.classGroup)
-          + "&source=" + encodeURIComponent(this.isEspecialClass) + "&start="+encodeURIComponent(this.classDate[0].Format("yyyy-MM-dd HH:mm:ss"))
-          + "&end="+encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet="+encodeURIComponent(this.publishType) + "&area=" + encodeURIComponent(this.userArea);
+          + "&source=" + encodeURIComponent(this.isEspecialClass) + "&start=" + encodeURIComponent(this.classDate[0].Format("yyyy-MM-dd HH:mm:ss"))
+          + "&end=" + encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet=" + encodeURIComponent(this.publishType) + "&area=" + encodeURIComponent(this.userArea);
         this.$http.get(urlNew, {headers: {'Authorization': 'JWT ' + that.myToken}})
           .then(function (response) {
             if (response.status == 200) {
               // console.log(response);
               response.data.forEach(function (item) {
                 item.DataType = "新课件";
-                that.allTableData.push(item);
+                if(that.courseState=="made")
+                {
+                  if(item.progress=="未发布"){
+                    that.allTableData.push(item);
+                  }
+                }
+                else if(that.courseState=="published"){
+                  if(item.progress=="已发布"){
+                    that.allTableData.push(item);
+                  }
+                }
+                else{
+                  that.allTableData.push(item);
+                }
               });
-              if (that.publishType=="source")
-              {
+              if (that.publishType == "source") {
                 that.loadingAll = false;
                 that.reShowTable();
                 return;
@@ -1471,8 +1515,22 @@
                   // console.log(response);
 
                   response.data.forEach(function (item) {
-                    that.allTableData.push(item);
+                    if(that.courseState=="made")
+                    {
+                      if(item.progress != "已审已发"){
+                        that.allTableData.push(item);
+                      }
+                    }
+                    else if(that.courseState=="published"){
+                      if(item.progress == "已审已发"){
+                        that.allTableData.push(item);
+                      }
+                    }
+                    else{
+                      that.allTableData.push(item);
+                    }
                   });
+                  //console.log(that.allTableData);
                   that.loadingAll = false;
                   that.reShowTable();
                 })
@@ -1702,13 +1760,13 @@
 
         var myCurrentShowTableData = [];
         var count = 0;
+        this.curPage = 1;
         for (var i = (this.curPage - 1) * 10; i < this.curPage * 10; i++) {
           if (this.allTableData[i]) {
             myCurrentShowTableData[count] = this.allTableData[i];
             count++;
           }
         }
-
         //当最后一页被删除完后自动跳到前一页
         if (myCurrentShowTableData.length == 0 && this.curPage > 1) {
           count = 0;
@@ -1719,7 +1777,7 @@
             }
           }
         }
-
+        this.currentShowTableData = [];
         this.currentShowTableData = myCurrentShowTableData;
       },
       exportNewExcel() {
@@ -1772,9 +1830,9 @@
 
         /* generate workbook object from table */
         //var wb = XLSX.utils.table_to_book(document.querySelector('#all_chosen_class_table'));
-        this.allTableChosen=[]
-        this.allTableChosen=this.allTableChosen.concat(this.tableDataNew)
-        this.allTableChosen=this.allTableChosen.concat(this.tableDataOld)
+        this.allTableChosen = []
+        this.allTableChosen = this.allTableChosen.concat(this.tableDataNew)
+        this.allTableChosen = this.allTableChosen.concat(this.tableDataOld)
         var ws = XLSX.utils.json_to_sheet(this.allTableChosen);
         var wb = new XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
@@ -1858,7 +1916,7 @@
                 that.searchProgress = parseInt(myProgress / allProgree * 100);
                 if (response.data.length == 1) {
                   hasSearchResult++;
-                  if (searchType === 'title'){
+                  if (searchType === 'title') {
                     that.$http.get("http://newpms.cei.cn/OldCourseQueryExacted/?field=title&val=" + response.data[0]["title"], {headers: {'Authorization': 'JWT ' + that.myToken}})
                       .then(function (ResponseOld) {
                         if (ResponseOld.data.length > 0) {
@@ -1866,7 +1924,7 @@
                             that.myExcelMultiple.push(item);
                           });
                         }
-                        else{
+                        else {
                           response.data.forEach(function (item) {
                             item.DataType = "新课件";
                             that.allTableData.push(item);
@@ -1880,15 +1938,15 @@
                         console.log(error);
                       });
                   }
-                  else{
+                  else {
                     response.data.forEach(function (item) {
-                    item.DataType = "新课件";
-                    that.allTableData.push(item);
-                  });
+                      item.DataType = "新课件";
+                      that.allTableData.push(item);
+                    });
                   }
                   that.reShowTable();
                 }
-                else if (response.data.length > 1){
+                else if (response.data.length > 1) {
                   hasSearchResult++;
                   response.data.forEach(function (item) {
                     that.myExcelMultiple.push(item);
@@ -1913,7 +1971,7 @@
                 that.searchProgress = parseInt(myProgress / allProgree * 100);
                 if (response.data.length == 1) {
                   hasSearchResult++;
-                  if (searchType == 'title'){
+                  if (searchType == 'title') {
                     that.$http.get("http://newpms.cei.cn/course/FieldQueryExacted/?field=title&val=" + response.data[0]["title"], {headers: {'Authorization': 'JWT ' + that.myToken}})
                       .then(function (ResponseNew) {
                         if (ResponseNew.data.length > 0) {
@@ -1921,7 +1979,7 @@
                             that.myExcelMultiple.push(item);
                           });
                         }
-                        else{
+                        else {
                           response.data.forEach(function (item) {
                             that.allTableData.push(item);
                           });
@@ -1934,14 +1992,14 @@
                         console.log(error);
                       });
                   }
-                  else{
+                  else {
                     response.data.forEach(function (item) {
-                    that.allTableData.push(item);
-                  });
-                  that.reShowTable();
+                      that.allTableData.push(item);
+                    });
+                    that.reShowTable();
                   }
                 }
-                else if (response.data.length > 1){
+                else if (response.data.length > 1) {
                   hasSearchResult++;
                   response.data.forEach(function (item) {
                     that.myExcelMultiple.push(item);
@@ -2012,11 +2070,11 @@
       PlayCourse(row) {
         if (row.DataType == '新课件') {
           //console.log(row.SourceCourseId);
-          if(row.SourceCourseId === null) {
-            window.open('http://203.207.118.112/CourseFile/'+row.CourseId.slice(0,4)+'/' + row.CourseId + '/publish/index.html');
+          if (row.SourceCourseId === null) {
+            window.open('http://203.207.118.112/CourseFile/' + row.CourseId.slice(0, 4) + '/' + row.CourseId + '/publish/index.html');
           }
           else {
-            window.open('http://203.207.118.112/CourseFile/'+row.CourseId.slice(0,4)+'/' + row.CourseId + '/index.html');
+            window.open('http://203.207.118.112/CourseFile/' + row.CourseId.slice(0, 4) + '/' + row.CourseId + '/index.html');
           }
         }
         else if (row.DataType == '旧课件') {
@@ -2026,7 +2084,7 @@
       PlayPic(row) {
         if (row.DataType == '新课件') {
           //console.log(row.SourceCourseId);
-          window.open('http://203.207.118.112/CourseFile/'+row.CourseId.slice(0,4)+'/' + row.CourseId + '/raw.jpg');
+          window.open('http://203.207.118.112/CourseFile/' + row.CourseId.slice(0, 4) + '/' + row.CourseId + '/raw.jpg');
         }
         else if (row.DataType == '旧课件') {
           window.open('http://lms.cei.cn/doc/' + row.CourseId + '/');
@@ -2035,7 +2093,7 @@
       PlayVideo(row) {
         if (row.DataType == '新课件') {
           //console.log(row.SourceCourseId);
-          window.open('http://203.207.118.112/CourseFile/'+row.CourseId.slice(0,4)+'/' + row.CourseId + '/raw.mp4');
+          window.open('http://203.207.118.112/CourseFile/' + row.CourseId.slice(0, 4) + '/' + row.CourseId + '/raw.mp4');
         }
         else if (row.DataType == '旧课件') {
           window.open('http://lms.cei.cn/doc/' + row.CourseId + '/');
@@ -2043,22 +2101,21 @@
       },
       //
       EditCourse(row) {
-          var login = encodeURIComponent(this.encode64(this.userName+'_'+this.userPassword));
-          //console.log(this.userName+'_'+this.userPassword);
-          var url='SlideEdit';
-          console.log(row.TempletType);
-          if(row.TempletType === '单视频')
-          {
-            url='CourseUpload';
-          }
-          if (row.SourceCourseId != '' && row.SourceCourseId && typeof(row.SourceCourseId)!='undefined') {
-            console.log('http://newpms.cei.cn/'+ url + '/?id=' + row.SourceCourseId + '&link=' + login);
-            window.open('http://newpms.cei.cn/'+ url + '/?id=' + row.SourceCourseId + '&link=' + login);
-          }
-          else {
-            console.log();
-            window.open('http://newpms.cei.cn/'+ url + '/?id=' + row.CourseId + '&link=' + login);
-          }
+        var login = encodeURIComponent(this.encode64(this.userName + '_' + this.userPassword));
+        //console.log(this.userName+'_'+this.userPassword);
+        var url = 'SlideEdit';
+        console.log(row.TempletType);
+        if (row.TempletType === '单视频') {
+          url = 'CourseUpload';
+        }
+        if (row.SourceCourseId != '' && row.SourceCourseId && typeof(row.SourceCourseId) != 'undefined') {
+          console.log('http://newpms.cei.cn/' + url + '/?id=' + row.SourceCourseId + '&link=' + login);
+          window.open('http://newpms.cei.cn/' + url + '/?id=' + row.SourceCourseId + '&link=' + login);
+        }
+        else {
+          console.log();
+          window.open('http://newpms.cei.cn/' + url + '/?id=' + row.CourseId + '&link=' + login);
+        }
       },
 
       courseFtpPublish(row) {
@@ -2166,43 +2223,63 @@
         // console.log(this.allTableChosen);
 
         var myNewWorkFormUrl = 'http://pms.cei.com.cn/InterFace/custom.ashx?method=insert';
-        var newWorkCourseTemplate ="";
-        if (!that.newWorkCourseChecked)
-        {
-          newWorkCourseTemplate="";
+        var newWorkCourseTemplate = "";
+        if (!that.newWorkCourseChecked) {
+          newWorkCourseTemplate = "";
         }
         else {
-          newWorkCourseTemplate=that.newWorkFormModel;
+          newWorkCourseTemplate = that.newWorkFormModel;
+        }
+        var HaveSingle = false;
+        that.tableDataNew.forEach(function (item) {
+          if (item.TempletType == '单视频') {
+            HaveSingle = true;
+          }
+        });
+        if (that.newWorkFormSlideVideo != 'none' && HaveSingle == true) {
+          that.$alert('工单中有单视频课件，单视频课件无法输出混剪MP4，需要先进行单改三制作。', '提示', {
+            confirmButtonText: '知道了',
+            callback: action => {
+              this.$message({
+                type: 'warning',
+                message: `action: ${ action }`
+              });
+            }
+          });
         }
         this.$axios({
           method: 'post',
           url: myNewWorkFormUrl,
           data: {
             "id": that.newWorkFormId,
-            "custom":  that.CustomerList.filter((t) => { return t.id == that.newWorkCustomerId })[0].name,
-            "CustomerId":that.newWorkCustomerId,
-            "MidCustomerId":that.newWorkMidCustomerId,
+            "custom": that.CustomerList.filter((t) => {
+              return t.id == that.newWorkCustomerId
+            })[0].name,
+            "CustomerId": that.newWorkCustomerId,
+            "MidCustomerId": that.newWorkMidCustomerId,
             "user": this.userName,
-            "DeadLine":this.newWorkDeadLine,
+            "DeadLine": this.newWorkDeadLine,
             "note": that.newWorkFormNote,
             "require": {
               "template": newWorkCourseTemplate,
               "DisplaySize": that.newWorkFormRatio,
-              "BitRate":that.newWorkFormBitRate,
-              "IsWaterMark":that.newWorkIsWaterMark,
-              "IsPic":that.newWorkIsPic,
-              "PicNote":that.newWorkPicNote,
-              "IsTemplate":that.newWorkIsTemplate,
-              "TemplateNote":that.newWorkTemplateNote,
-              "AttText":IsInArray(that.newWorkAttachmentList,'text').toString(),
-              "AttPPT":IsInArray(that.newWorkAttachmentList,'ppt').toString(),
-              "AttTest":IsInArray(that.newWorkAttachmentList,'test').toString(),
-              "AttSummary":IsInArray(that.newWorkAttachmentList,'summary').toString(),
-              "AttLecturer":IsInArray(that.newWorkAttachmentList,'lecturer').toString()
+              "BitRate": that.newWorkFormBitRate,
+              "IsWaterMark": that.newWorkIsWaterMark,
+              "IsPic": that.newWorkIsPic,
+              "PicNote": that.newWorkPicNote,
+              "IsTemplate": that.newWorkIsTemplate,
+              "TemplateNote": that.newWorkTemplateNote,
+              "SlideVideo": that.newWorkFormSlideVideo,
+              "SlideVideoOP":that.newWorkFormSlideVideoOP,
+              "AttText": IsInArray(that.newWorkAttachmentList, 'text').toString(),
+              "AttPPT": IsInArray(that.newWorkAttachmentList, 'ppt').toString(),
+              "AttTest": IsInArray(that.newWorkAttachmentList, 'test').toString(),
+              "AttSummary": IsInArray(that.newWorkAttachmentList, 'summary').toString(),
+              "AttLecturer": IsInArray(that.newWorkAttachmentList, 'lecturer').toString()
             },
             "CourseData": that.tableDataNew.concat(that.tableDataOld)
           },
-          withCredentials:false
+          withCredentials: false
         }).then(function (res) {
           // console.log(res);
           if (res.status == 201) {
@@ -2244,30 +2321,28 @@
           }
         });
         var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
-        var dealNote="无";
-        if(that.dealWorkFormNote){
-          dealNote=that.dealWorkFormNote;
+        var dealNote = "无";
+        if (that.dealWorkFormNote) {
+          dealNote = that.dealWorkFormNote;
         }
-        var TaskPriority="A";
-        var SlideVideo=false;
-        if (that.dealWorkFormSlideVideo=="1")
-        {
-          SlideVideo=true;
-          TaskPriority="D";
+        var TaskPriority = "A";
+        var SlideVideo = that.dealWorkFormSlideVideo;
+        if (that.dealWorkFormSlideVideo != "none") {
+          TaskPriority = "D";
         }
         var extendedData = {
           "template": that.dealWorkFormModel,
           "DisplaySize": that.dealWorkFormRatio,
           "rename": that.dealWorkFormRename,
           "WaterMark": that.dealWorkIsWaterMark,
-          "AttText":IsInArray(that.dealWorkAttachmentList,'text'),
-          "AttPPT":IsInArray(that.dealWorkAttachmentList,'ppt'),
-          "AttTest":IsInArray(that.dealWorkAttachmentList,'test'),
-          "AttSummary":IsInArray(that.dealWorkAttachmentList,'summary'),
-          "AttLecturer":IsInArray(that.dealWorkAttachmentList,'lecturer'),
-          "SlideVideo":SlideVideo,
-          "SlideVideoType":that.dealWorkFormSlideVideoType,
-          "SlideVideoOP":that.dealWorkFormSlideVideoOP
+          "AttText": IsInArray(that.dealWorkAttachmentList, 'text'),
+          "AttPPT": IsInArray(that.dealWorkAttachmentList, 'ppt'),
+          "AttTest": IsInArray(that.dealWorkAttachmentList, 'test'),
+          "AttSummary": IsInArray(that.dealWorkAttachmentList, 'summary'),
+          "AttLecturer": IsInArray(that.dealWorkAttachmentList, 'lecturer'),
+          "SlideVideo": SlideVideo,
+          "SlideVideoType": that.dealWorkFormSlideVideoType,
+          "SlideVideoOP": that.dealWorkFormSlideVideoOP
         };
         extendedData = JSON.stringify(extendedData);
         this.$axios({
@@ -2276,11 +2351,11 @@
           headers: {'Authorization': 'JWT ' + that.myToken},
           data: {
             "TaskType": "CourseDownload",
-            "TaskPriority":TaskPriority,
-            "TaskNote": that.showFormWorkId+'_'+that.showFormWorkCustomerName+'_新课_'+dealNote,
+            "TaskPriority": TaskPriority,
+            "TaskNote": that.showFormWorkId + '_' + that.showFormWorkCustomerName + '_新课_' + dealNote,
             "ExtendedData": extendedData,
             "course": showFormWorkAllCourseDataIds,
-            "customer":that.showFormWorkCustomerId,
+            "customer": that.showFormWorkCustomerId,
           }
         }).then(function (res) {
           console.log(res);
@@ -2289,8 +2364,8 @@
               type: 'success',
               message: '任务已添加'
             });
-            that.DealNewBtnState=true;
-            that.DealNewBtnText='任务已添加';
+            that.DealNewBtnState = true;
+            that.DealNewBtnText = '任务已添加';
           } else if (res.status == 204) {
             that.$message({
               type: 'warning',
@@ -2308,15 +2383,13 @@
       },
       submitDealOld() {
         var that = this;
-        if((that.oldTemplateVal=="" && that.oldTemplate2012Val!="")||(that.oldTemplateVal!="" && that.oldTemplate2012Val==""))
-        {
+        if ((that.oldTemplateVal == "" && that.oldTemplate2012Val != "") || (that.oldTemplateVal != "" && that.oldTemplate2012Val == "")) {
           that.$message({
             type: 'warning',
             message: '模板信息不全'
           });
         }
-        else
-        {
+        else {
           var OldCourseIdList = [];
           //this.showFormWorkAllCourseData.forEach(function (item) {
           this.tableDataOld.forEach(function (item) {
@@ -2377,15 +2450,15 @@
           });
         }
       },
-      submitOldVideoCheck () {
+      submitOldVideoCheck() {
 
-        },
+      },
       submitImportVideo() {
         var that = this;
         var OldCourseIdList = [];
         //this.showFormWorkAllCourseData.forEach(function (item) {
         this.tableDataOld.forEach(function (item) {
-          OldCourseIdList.push({"id":item.CourseId,"title":item.title,"type":item.TempletType});
+          OldCourseIdList.push({"id": item.CourseId, "title": item.title, "type": item.TempletType});
         });
         var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
         var extendedData = {
@@ -2393,17 +2466,17 @@
           "CourseList": OldCourseIdList
         };
         extendedData = JSON.stringify(extendedData);
-        var dealNote="无";
+        var dealNote = "无";
         this.$axios({
           method: 'post',
           url: myDealWorkFormTokenUrl,
           headers: {'Authorization': 'JWT ' + that.myToken},
           data: {
             "TaskType": "OldCourseUploadVideo",
-            "TaskNote": '导入旧课视频_'+dealNote,
+            "TaskNote": '导入旧课视频_' + dealNote,
             "ExtendedData": extendedData,
             "course": null,
-            "customer":null,
+            "customer": null,
           }
         }).then(function (res) {
           console.log(res);
@@ -2412,8 +2485,8 @@
               type: 'success',
               message: '任务已添加'
             });
-            that.DealOldBtnState=true;
-            that.DealOldBtnText='任务已添加';
+            that.DealOldBtnState = true;
+            that.DealOldBtnText = '任务已添加';
           } else if (res.status == 204) {
             that.$message({
               type: 'warning',
@@ -2429,7 +2502,7 @@
           console.log(err);
         });
       },
-      submitDealProject(){
+      submitDealProject() {
         var that = this;
         if (that.showFormWorkId) {
           var myDealWorkFormUrl = 'http://pms.cei.com.cn/InterFace/custom.ashx?method=UpdateProgress';
@@ -2450,7 +2523,7 @@
                 type: 'success',
                 message: '处理工单成功！'
               });
-              that.DealProjectBtnState=true;
+              that.DealProjectBtnState = true;
               that.dialogWorkFormVisible = false;
             } else if (res.status == 204) {
               that.$message({
@@ -2472,7 +2545,7 @@
           url: myDealWorkFormUrl,
           data: {
             "id": that.showFormWorkId,
-            "type":type
+            "type": type
           },
           withCredentials: false
         }).then(function (res) {
@@ -2482,32 +2555,28 @@
               type: 'success',
               message: '处理成功！'
             });
-            if (type == "help")
-            {
+            if (type == "help") {
               that.DealSendingHelpBtnState = true;
-              that.DealSendingHelpBtnText='已发送';
+              that.DealSendingHelpBtnText = '已发送';
             }
-            if (type == "mchelp")
-            {
+            if (type == "mchelp") {
               that.DealSendingMcHelpBtnState = true;
-              that.DealSendingMcHelpBtnText='已发送';
+              that.DealSendingMcHelpBtnText = '已发送';
             }
-            else if (type == "pic")
-            {
+            else if (type == "pic") {
               that.DealSendingPicBtnState = true;
-              that.DealSendingPicBtnText='已发送';
+              that.DealSendingPicBtnText = '已发送';
             }
-            else if (type == "template")
-            {
+            else if (type == "template") {
               that.DealSendingTemplateBtnState = true;
-              that.DealSendingTemplateBtnText='已发送';
+              that.DealSendingTemplateBtnText = '已发送';
             }
-            else if (type == "attachment")
-            {
+            else if (type == "attachment") {
               that.DealSendingAttachmentBtnState = true;
-              that.DealSendingAttachmentBtnText='已发送';
+              that.DealSendingAttachmentBtnText = '已发送';
             }
-            else { }
+            else {
+            }
           } else if (res.status == 204) {
             that.$message({
               type: 'warning',
@@ -2519,17 +2588,17 @@
           console.log(err);
         })
       },
-      submitAddCustomer(){
+      submitAddCustomer() {
         var that = this;
         this.$axios({
           method: 'post',
-          url:  'http://newpms.cei.cn/customer/',
+          url: 'http://newpms.cei.cn/customer/',
           headers: {'Authorization': 'JWT ' + that.myToken},
           data: {
             "name": that.AddCustomerName,
-            "sort":that.AddCustomerType,
-            "sortExt":that.AddCustomerTypeExt,
-            "area":that.userArea
+            "sort": that.AddCustomerType,
+            "sortExt": that.AddCustomerTypeExt,
+            "area": that.userArea
           }
         }).then(function (res) {
           console.log(res);
@@ -2543,7 +2612,9 @@
             //data
             var getCustomerUrl = 'http://newpms.cei.cn/customer/';
             that.$http.get(getCustomerUrl).then(function (res) {
-              that.CustomerList = res.data.filter((t) => { return t.area == 'n' })
+              that.CustomerList = res.data.filter((t) => {
+                return t.area == 'n'
+              })
 
             }).catch(function (err) {
               console.log(err);
@@ -2568,13 +2639,25 @@
       },
       handleRatioCommand(val) {
         var BitRatio;
-        if(val=="352*288"){ BitRatio="180"; }
-        else if(val=="640*360"){ BitRatio="300"; }
-        else if(val=="720*576"){ BitRatio="500"; }
-        else if(val=="1280*720"){ BitRatio="2000"; }
-        else if(val=="1920*1080"){ BitRatio="8000"; }
-        else{ BitRatio=""; }
-        this.newWorkFormBitRate=BitRatio;
+        if (val == "352*288") {
+          BitRatio = "180";
+        }
+        else if (val == "640*360") {
+          BitRatio = "300";
+        }
+        else if (val == "720*576") {
+          BitRatio = "500";
+        }
+        else if (val == "1280*720") {
+          BitRatio = "2000";
+        }
+        else if (val == "1920*1080") {
+          BitRatio = "8000";
+        }
+        else {
+          BitRatio = "";
+        }
+        this.newWorkFormBitRate = BitRatio;
         //console.log(this.newWorkAttachmentList);
       },
       OldVideoQuery() {
@@ -2594,14 +2677,14 @@
               type: 'success',
               message: '查询成功'
             });
-            that.OldNoWaterFilterList=res.data.OldNoWaterFilterList;
-            that.OldWithWaterFilterList=res.data.OldWithWaterFilterList;
-            that.OldNoVideoFilterList=res.data.OldNoVideoFilterList;
-            that.OldVideoHelpList=res.data.OldNoVideoFilterList;
-            that.HelpVideoCount=getJsonLength(that.OldNoVideoFilterList);
-            that.WithWaterVideoCount=getJsonLength(that.OldWithWaterFilterList);
-            that.NoWaterVideoCount=getJsonLength(that.OldNoWaterFilterList),
-            that.IsOldVideoQuery=true;
+            that.OldNoWaterFilterList = res.data.OldNoWaterFilterList;
+            that.OldWithWaterFilterList = res.data.OldWithWaterFilterList;
+            that.OldNoVideoFilterList = res.data.OldNoVideoFilterList;
+            that.OldVideoHelpList = res.data.OldNoVideoFilterList;
+            that.HelpVideoCount = getJsonLength(that.OldNoVideoFilterList);
+            that.WithWaterVideoCount = getJsonLength(that.OldWithWaterFilterList);
+            that.NoWaterVideoCount = getJsonLength(that.OldNoWaterFilterList),
+              that.IsOldVideoQuery = true;
           } else if (res.status == 204) {
             that.$message({
               type: 'warning',
@@ -2617,94 +2700,93 @@
           console.log(err);
         });
       },
-      ShowOldVideoNoWaterCount(){
-        this.OldVideoTableData=this.OldNoWaterFilterList;
-        this.dialogOldVideoListVisible=true;
+      ShowOldVideoNoWaterCount() {
+        this.OldVideoTableData = this.OldNoWaterFilterList;
+        this.dialogOldVideoListVisible = true;
       },
-      ShowOldVideoWithWaterCount(){
-        this.OldVideoTableData=this.OldWithWaterFilterList;
-        this.dialogOldVideoListVisible=true;
+      ShowOldVideoWithWaterCount() {
+        this.OldVideoTableData = this.OldWithWaterFilterList;
+        this.dialogOldVideoListVisible = true;
       },
-      ShowOldVideoHelpCount(){
-        this.OldVideoTableData=this.OldVideoHelpList;
-        this.dialogOldVideoListVisible=true;
+      ShowOldVideoHelpCount() {
+        this.OldVideoTableData = this.OldVideoHelpList;
+        this.dialogOldVideoListVisible = true;
       },
-      SwitchHelpVideoList(){
+      SwitchHelpVideoList() {
         //console.log(this.IsHelpWaterMark);
-        if(this.IsHelpWaterMark && !this.IsHelpAll){
-          this.HelpVideoCount=getJsonLength(this.OldNoVideoFilterList)+getJsonLength(this.OldWithWaterFilterList);
-          this.OldVideoHelpList=this.OldNoVideoFilterList.concat(this.OldWithWaterFilterList);
+        if (this.IsHelpWaterMark && !this.IsHelpAll) {
+          this.HelpVideoCount = getJsonLength(this.OldNoVideoFilterList) + getJsonLength(this.OldWithWaterFilterList);
+          this.OldVideoHelpList = this.OldNoVideoFilterList.concat(this.OldWithWaterFilterList);
         }
-        else if (!this.IsHelpWaterMark && !this.IsHelpAll)
-        {
-          this.HelpVideoCount=getJsonLength(this.OldNoVideoFilterList);
-          this.OldVideoHelpList=this.OldNoVideoFilterList;
+        else if (!this.IsHelpWaterMark && !this.IsHelpAll) {
+          this.HelpVideoCount = getJsonLength(this.OldNoVideoFilterList);
+          this.OldVideoHelpList = this.OldNoVideoFilterList;
         }
       },
-      SwitchHelpVideoListAll(){
+      SwitchHelpVideoListAll() {
         //console.log(this.IsHelpWaterMark);
-        if(this.IsHelpAll){
-          this.HelpVideoCount=getJsonLength(this.OldNoVideoFilterList)+getJsonLength(this.OldWithWaterFilterList)+getJsonLength(this.OldNoWaterFilterList);
-          this.OldVideoHelpList=this.OldNoVideoFilterList.concat(this.OldWithWaterFilterList).concat(this.OldNoWaterFilterList);
+        if (this.IsHelpAll) {
+          this.HelpVideoCount = getJsonLength(this.OldNoVideoFilterList) + getJsonLength(this.OldWithWaterFilterList) + getJsonLength(this.OldNoWaterFilterList);
+          this.OldVideoHelpList = this.OldNoVideoFilterList.concat(this.OldWithWaterFilterList).concat(this.OldNoWaterFilterList);
         }
-        else{
-          this.HelpVideoCount=getJsonLength(this.OldNoVideoFilterList);
-          this.OldVideoHelpList=this.OldNoVideoFilterList;
+        else {
+          this.HelpVideoCount = getJsonLength(this.OldNoVideoFilterList);
+          this.OldVideoHelpList = this.OldNoVideoFilterList;
         }
       },
-      SubmitOldNoWater(){
+      SubmitOldNoWater() {
         var that = this;
-          var SubmitList = [];
-          this.OldNoWaterFilterList.forEach(function (item) {
-            SubmitList.push({"id": item.CourseId, "title": item.title, "type": item.TempletType});
-          });
-          var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
-          var extendedData = {
-            "DisplaySize": that.dealOldWorkFormRatio,
-            "WaterMark": that.dealOldWorkIsWaterMark,
-            "CourseList": SubmitList
-          };
-          extendedData = JSON.stringify(extendedData);
-          var dealNote = "无";
-          if (that.dealOldWorkFormNote) {
-            dealNote = that.dealOldWorkFormNote;
+        var SubmitList = [];
+        this.OldNoWaterFilterList.forEach(function (item) {
+          SubmitList.push({"id": item.CourseId, "title": item.title, "type": item.TempletType});
+        });
+        var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
+        var extendedData = {
+          "DisplaySize": that.dealOldWorkFormRatio,
+          "WaterMark": that.dealOldWorkIsWaterMark,
+          "CourseList": SubmitList
+        };
+        extendedData = JSON.stringify(extendedData);
+        var dealNote = "无";
+        if (that.dealOldWorkFormNote) {
+          dealNote = that.dealOldWorkFormNote;
+        }
+        this.$axios({
+          method: 'post',
+          url: myDealWorkFormTokenUrl,
+          headers: {'Authorization': 'JWT ' + that.myToken},
+          data: {
+            "TaskType": "OldCourseDownload",
+            "TaskNote": that.showFormWorkId + '_' + that.showFormWorkCustomerName + '_旧课无水印视频_' + dealNote,
+            "ExtendedData": extendedData,
+            "course": null,
+            "customer": that.showFormWorkCustomerId,
           }
-          this.$axios({
-            method: 'post',
-            url: myDealWorkFormTokenUrl,
-            headers: {'Authorization': 'JWT ' + that.myToken},
-            data: {
-              "TaskType": "OldCourseDownload",
-              "TaskNote": that.showFormWorkId + '_' + that.showFormWorkCustomerName + '_旧课无水印视频_' + dealNote,
-              "ExtendedData": extendedData,
-              "course": null,
-              "customer": that.showFormWorkCustomerId,
-            }
-          }).then(function (res) {
-            console.log(res);
-            if (res.status == 201) {
-              that.$message({
-                type: 'success',
-                message: '任务已添加'
-              });
-              that.OldNoWaterBtnState = true;
-              that.OldNoWaterBtnText = '任务已添加';
-            } else if (res.status == 204) {
-              that.$message({
-                type: 'warning',
-                message: '重复操作'
-              });
-              //that.dialogWorkFormVisible = false;
-            }
-          }).catch(function (err) {
+        }).then(function (res) {
+          console.log(res);
+          if (res.status == 201) {
+            that.$message({
+              type: 'success',
+              message: '任务已添加'
+            });
+            that.OldNoWaterBtnState = true;
+            that.OldNoWaterBtnText = '任务已添加';
+          } else if (res.status == 204) {
             that.$message({
               type: 'warning',
-              message: '错误！'
+              message: '重复操作'
             });
-            console.log(err);
+            //that.dialogWorkFormVisible = false;
+          }
+        }).catch(function (err) {
+          that.$message({
+            type: 'warning',
+            message: '错误！'
           });
+          console.log(err);
+        });
       },
-      SubmitOldWithWater(){
+      SubmitOldWithWater() {
         var that = this;
         var SubmitList = [];
         this.OldWithWaterFilterList.forEach(function (item) {
@@ -2756,7 +2838,7 @@
           console.log(err);
         });
       },
-      SubmitOldHelp(){
+      SubmitOldHelp() {
         var that = this;
         var myDealWorkFormUrl = 'http://pms.cei.com.cn/InterFace/custom.ashx?method=UpdateSending';
         //var myDealWorkFormUrl = 'http://192.168.194.88:667/InterFace/custom.ashx?method=UpdateSending';
@@ -2765,8 +2847,8 @@
           url: myDealWorkFormUrl,
           data: {
             "id": that.showFormWorkId,
-            "type":'help',
-            "HelpCourseData":that.OldVideoHelpList
+            "type": 'help',
+            "HelpCourseData": that.OldVideoHelpList
           },
           withCredentials: false
         }).then(function (res) {
@@ -2777,9 +2859,9 @@
               message: '处理成功！'
             });
             that.DealSendingHelpBtnState = true;
-            that.DealSendingHelpBtnText='已发送';
-            that.OldHelpBtnState=true;
-            that.OldHelpBtnText='任务已添加';
+            that.DealSendingHelpBtnText = '已发送';
+            that.OldHelpBtnState = true;
+            that.OldHelpBtnText = '任务已添加';
           } else if (res.status == 204) {
             that.$message({
               type: 'warning',
@@ -2791,7 +2873,7 @@
           console.log(err);
         })
       },
-      SubmitOldHelpQuery(){
+      SubmitOldHelpQuery() {
         var that = this;
         var url = 'http://pms.cei.com.cn/InterFace/custom.ashx?method=OldHelpQuery';
         this.$axios({
@@ -2799,8 +2881,8 @@
           url: url,
           params: {
             id: that.showFormWorkId
-                  },
-          withCredentials:false
+          },
+          withCredentials: false
         }).then(function (res) {
           console.log(res);
           if (res.status == 200) {
@@ -2808,8 +2890,8 @@
               type: 'success',
               message: '查询成功'
             });
-            that.OldHelpQueryData=res.data.HelpCourseData;
-            that.OldHelpQueryCount=res.data.HelpCourseData.length;
+            that.OldHelpQueryData = res.data.HelpCourseData;
+            that.OldHelpQueryCount = res.data.HelpCourseData.length;
           } else if (res.status == 204) {
             that.$message({
               type: 'warning',
@@ -2825,9 +2907,9 @@
           console.log(err);
         });
       },
-      ShowOldHelpCount(){
-        this.OldVideoTableData=this.OldHelpQueryData;
-        this.dialogOldVideoListVisible=true;
+      ShowOldHelpCount() {
+        this.OldVideoTableData = this.OldHelpQueryData;
+        this.dialogOldVideoListVisible = true;
       }
     }
   }
