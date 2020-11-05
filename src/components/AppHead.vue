@@ -10,7 +10,7 @@
       active-text-color="#ffd04b">
       <el-menu-item index="1">课程</el-menu-item>
       <el-menu-item index="2">制作队列</el-menu-item>
-
+      <!--<el-menu-item index="3">客户信息</el-menu-item>-->
       <!--<el-menu-item index="3">课程列表2</el-menu-item>-->
 
     </el-menu>
@@ -45,6 +45,10 @@
           else if (key==2)
           {
             this.$router.push('/TaskList?'+UrlStr);
+          }
+          else if (key==3)
+          {
+            this.$router.push('/CustomerEdit?'+UrlStr);
           }
         }
       }

@@ -11,9 +11,11 @@
         <el-select
           v-model="videoType" style="width: 153px" placeholder="选择视频类型">
           <el-option label="不限课件类型" value=""></el-option>
+          <el-option label="精品名家课" value="精品名家课"></el-option>
+          <el-option label="混剪单视频" value="混剪单视频"></el-option>
+          <el-option label="微课" value="微课"></el-option>
           <el-option label="单视频" value="单视频"></el-option>
           <el-option label="三分屏" value="三分屏"></el-option>
-          <el-option label="微课" value="微课"></el-option>
         </el-select>
         <el-select v-model="courseState" style="width: 153px" placeholder="选择状态">
           <el-option label="不限发布状态" value="none"></el-option>
@@ -50,7 +52,7 @@
           <el-option label="编号" value="A"></el-option>
           <el-option label="标题" value="B"></el-option>
         </el-select>
-
+        <el-checkbox v-model="excelSearchTemplate">筛选模板</el-checkbox>
         <el-upload
           class="upload-demo"
           action="https://jsonplaceholder.typicode.com/posts/"
@@ -141,6 +143,9 @@
             </el-tooltip>
               <el-tooltip class="item" effect="dark" content="查看视频" placement="bottom-start">
                 <i class="iconfont" @click="PlayVideo(scope.row)" v-show="publishType =='source'?true:false">&#xe674;</i>
+              </el-tooltip>
+              <el-tooltip class="item" effect="dark" content="编辑" placement="bottom-start">
+                <i class="iconfont" @click="EditCourse(scope.row)" v-show="publishType =='source'?true:false">&#xe60c;</i>
               </el-tooltip>
             </template>
           </el-table-column>
@@ -570,11 +575,18 @@
         <el-tag  type="info">新课输出</el-tag>
         <el-row :gutter="20">
           <el-col :span="4">下载课件:</el-col>
-          <el-col :span="20">
+          <el-col :span="8">
             <el-select v-model="dealWorkFormModel" filterable placeholder="请选择模板">
               <el-option label="不需要" value=""></el-option>
               <el-option v-for="item in videoModelForChoose" :label="item.name" :value="item.id"
                          :key="item.id"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="8">
+            <el-select v-model="dealWorkFormModelType" filterable placeholder="请选择模板类型">
+              <el-option label="自动" value="auto"></el-option>
+              <el-option label="三分屏" value="slide"></el-option>
+              <el-option label="精品" value="elite"></el-option>
             </el-select>
           </el-col>
         </el-row>
@@ -597,7 +609,7 @@
             </el-select>
           </el-col>
           <el-col :span="6">
-            <el-select v-model="dealWorkFormSlideVideoType" placeholder="请选择类型" disabled="true">
+            <el-select v-model="dealWorkFormSlideVideoType" placeholder="请选择类型" >
               <el-option label="标准" value=""></el-option>
               <el-option label="画中画" value="PIP"></el-option>
             </el-select>
@@ -834,6 +846,7 @@
         /*Excel检索的变量*/
         fileList: [],
         excelSearchType: 'A',
+        excelSearchTemplate:false,
         searchProgress: 0,
         X: null,
         excelFile: {},
@@ -980,11 +993,12 @@
 
         /*处理工单-信息填写的变量*/
         dealWorkFormModel: '',
+        dealWorkFormModelType:'auto',
         dealWorkFormRatio: '',
         dealWorkFormNote: '',
         dealWorkFormRename: '1',
         dealWorkAttachmentList: [],
-        dealWorkIsWaterMark: 'zjsp',
+        dealWorkIsWaterMark: 'none',
         dealOldWorkFormRename: '1',
         dealOldWorkIsWaterMark: '',
         dealOldWorkFormRatio: '',
@@ -1862,6 +1876,7 @@
           if (rAbs) {
             wb = that.X.read(data, {type: 'binary'});
           }
+          console.log(wb.Sheets.Sheet1);
           that.excelSearchAndShowOnPage(wb.Sheets.Sheet1)
         };
         if (rAbs) {
@@ -1872,14 +1887,19 @@
       },
       excelSearchAndShowOnPage(mySheet) {
         //console.log(mySheet);
-        var sheetSize = Object.getOwnPropertyNames(mySheet).length / 2 - 1;
-        var idArray = [];//记录已添加
-        for (var i = 2; i <= sheetSize; i++) {
-          if (idArray.indexOf(mySheet[this.excelSearchType + i]['v']) < 0) // <0已添加列表中未出现，可以新增
+        if(this.excelSearchTemplate==true) {
+          var sheetSize = (Object.getOwnPropertyNames(mySheet).length-2) / 3;
+          var idArray = [];//记录已添加
+          //var TypeArray = [];//记录已添加
+          console.log(Object.getOwnPropertyNames(mySheet));
+          for (var i = 2; i <= sheetSize; i++) {
+          console.log(i);
+          if (idArray.indexOf(mySheet[this.excelSearchType + i]['v']+"_"+mySheet['C' + i]['v']) < 0) // <0已添加列表中未出现，可以新增
           {
             var mySheetItem = {
               id: mySheet['A' + i]['v'],
               title: mySheet['B' + i]['v'],
+              type: mySheet['C' + i]['v'],
               status: 0  //0:搜索成功且唯一；1：搜索不存在；2：搜索重复；3:未知；
             };
             this.myExcel.push(mySheetItem);
@@ -1887,11 +1907,41 @@
             var mySheetItem = {
               id: mySheet['A' + i]['v'],
               title: mySheet['B' + i]['v'],
+              type: mySheet['C' + i]['v'],
               status: 2
             };
             this.myExcelRepeat.push(mySheetItem);
           }
-          idArray.push(mySheet[this.excelSearchType + i]['v']);
+          idArray.push(mySheet[this.excelSearchType + i]['v']+"_"+mySheet['C' + i]['v']);
+          //TypeArray.push(mySheet['C' + i]['v']);
+        }
+        }
+        else {
+          var sheetSize = (Object.getOwnPropertyNames(mySheet).length-2) / 2;
+          var idArray = [];//记录已添加
+          //var TypeArray = [];//记录已添加
+          console.log(Object.getOwnPropertyNames(mySheet));
+          for (var i = 2; i <= sheetSize; i++) {
+            console.log(i);
+            if (idArray.indexOf(mySheet[this.excelSearchType + i]['v']) < 0) // <0已添加列表中未出现，可以新增
+            {
+              var mySheetItem = {
+                id: mySheet['A' + i]['v'],
+                title: mySheet['B' + i]['v'],
+                status: 0  //0:搜索成功且唯一；1：搜索不存在；2：搜索重复；3:未知；
+              };
+              this.myExcel.push(mySheetItem);
+            } else { //已添加列表中出现，重复
+              var mySheetItem = {
+                id: mySheet['A' + i]['v'],
+                title: mySheet['B' + i]['v'],
+                status: 2
+              };
+              this.myExcelRepeat.push(mySheetItem);
+            }
+            idArray.push(mySheet[this.excelSearchType + i]['v']);
+            //TypeArray.push(mySheet['C' + i]['v']);
+          }
         }
         this.allTableData = [];
         this.currentShowTableData = [];
@@ -1902,14 +1952,22 @@
         //console.log(this.myExcel.length)
         for (var i = 0; i < this.myExcel.length; i++) {
           //console.log(i)
-          var urlexcelNew = "http://newpms.cei.cn/course/FieldQueryExacted/" +
+          var urlexcelNew = "";
+          if(this.excelSearchTemplate==true) {
+            urlexcelNew = "http://newpms.cei.cn/course/FieldQueryExacted/" +
+              "?field=" + searchType + "&val=" + this.myExcel[i][searchType]+"&type="+this.myExcel[i]['type'];
+          }
+          else{
+            urlexcelNew = "http://newpms.cei.cn/course/FieldQueryExacted/" +
             "?field=" + searchType + "&val=" + this.myExcel[i][searchType];
+          }
           var urlexcelOld = "http://newpms.cei.cn/OldCourseQueryExacted/" +
             "?field=" + searchType + "&val=" + this.myExcel[i][searchType];
           //新课检索
           (function () {
             var index = i;
             var hasSearchResult = 0;
+            console.log(urlexcelNew);
             that.$http.get(urlexcelNew, {headers: {'Authorization': 'JWT ' + that.myToken}})
               .then(function (response) {
                 myProgress++;
@@ -2105,7 +2163,7 @@
         //console.log(this.userName+'_'+this.userPassword);
         var url = 'SlideEdit';
         console.log(row.TempletType);
-        if (row.TempletType === '单视频') {
+        if (row.TempletType === '精品单视频'|| row.TempletType === '单视频' || row.TempletType === '精品名家课') {
           url = 'CourseUpload';
         }
         if (row.SourceCourseId != '' && row.SourceCourseId && typeof(row.SourceCourseId) != 'undefined') {
@@ -2332,6 +2390,7 @@
         }
         var extendedData = {
           "template": that.dealWorkFormModel,
+          "TemplateType":that.dealWorkFormModelType,
           "DisplaySize": that.dealWorkFormRatio,
           "rename": that.dealWorkFormRename,
           "WaterMark": that.dealWorkIsWaterMark,
