@@ -2,7 +2,7 @@
   <div class="main-div">
     <app-head @getMenuIndex="getMenuIndexVal"></app-head>
     <div style="margin: 20px 10px 10px 10px">
-      <el-button type="primary" size="mini" @click="dialogCityVisible=true">编辑城市选项</el-button>
+      <el-button type="primary" size="mini" @click="dialogCityVisible=true" disabled>编辑城市选项</el-button>
     </div>
     <div style="margin: 20px 10px 10px 10px">
       <el-input
@@ -60,7 +60,7 @@
       </el-table-column>
       <el-table-column label="省份">
         <template slot-scope="scope">
-          <el-select size="mini" placeholder="选择" v-model="scope.row.province" v-bind:disabled="!scope.row.IsEdit" filterable>
+          <el-select size="mini" placeholder="选择" v-model="scope.row.province" v-bind:disabled="!scope.row.IsEdit" @change="selectProvinceChange" filterable>
             <el-option
               v-for="item in OptionsProvince"
               :key="item.value"
@@ -72,12 +72,12 @@
       </el-table-column>
       <el-table-column label="城市">
         <template slot-scope="scope">
-          <el-select size="mini" placeholder="选择" v-model="scope.row.city" v-bind:disabled="!scope.row.IsEdit" filterable>
+          <el-select size="mini" placeholder="选择" v-model="scope.row.city" v-bind:disabled="!scope.row.IsEdit"  filterable>
             <el-option
-              v-for="item in OptionsCity"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value">
+              v-for="item in OptionsCurrentCity"
+              :key="item"
+              :label="item"
+              :value="item">
             </el-option>
           </el-select>
         </template>
@@ -116,12 +116,32 @@
       </el-table-column>
       <el-table-column label="开始年份">
           <template slot-scope="scope">
-            <el-input size="mini" placeholder="输入年份" v-model="scope.row.StartDate" v-bind:disabled="!scope.row.IsEdit"></el-input>
+            <!--<el-input size="mini" placeholder="输入年份" v-model="scope.row.StartDate" v-bind:disabled="!scope.row.IsEdit"></el-input>-->
+            <el-date-picker
+              v-model="scope.row.StartDate"
+              v-bind:disabled="!scope.row.IsEdit"
+              size="mini"
+              align="right"
+              type="date"
+              value-format="yyyy-MM-dd"
+              placeholder="选择日期"
+            >
+            </el-date-picker>
           </template>
       </el-table-column>
       <el-table-column label="停止年份">
         <template slot-scope="scope">
-          <el-input size="mini" placeholder="输入年份" v-model="scope.row.EndDate" v-bind:disabled="!scope.row.IsEdit"></el-input>
+          <!--<el-input size="mini" placeholder="输入年份" v-model="scope.row.EndDate" v-bind:disabled="!scope.row.IsEdit"></el-input>-->
+          <el-date-picker
+            v-model="scope.row.EndDate"
+            v-bind:disabled="!scope.row.IsEdit"
+            size="mini"
+            align="right"
+            type="date"
+            value-format="yyyy-MM-dd"
+            placeholder="选择日期"
+          >
+          </el-date-picker>
         </template>
       </el-table-column>
       <el-table-column label="所属销售">
@@ -205,8 +225,10 @@
           OptionsState:[],
           OptionsProvince:[],
           OptionsCity:[],
+          OptionsCurrentCity:[],
           seller:[],
           CustomerSearch: '',
+          CurrentRow:{},
           //
           total:0,//默认数据总数
           pageSize:10,//每页的数据条数
@@ -287,6 +309,10 @@
               })
         },
         edit(row, index) {
+          if( !row.IsEdit === true){
+            this.CurrentRow=row;
+            console.log(row.id);
+          }
           if( row.IsEdit === true)
           {
             var that = this;
@@ -384,6 +410,12 @@
                 console.log(err);
               })
             })
+        },
+        selectProvinceChange(value){
+          var CurrentProvince = this.OptionsCity.filter(function (e) { return e.name == value; })
+          this.OptionsCurrentCity = CurrentProvince[0].city
+          this.CurrentRow.city=CurrentProvince[0].city[0]
+          console.log(this.CurrentRow.id);
         },
         tableRowClassName({ row, rowIndex }) {
           if (row.IsEdit  === true) {

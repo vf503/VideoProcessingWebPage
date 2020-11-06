@@ -2580,7 +2580,7 @@
             if (res.status == 200) {
               that.$message({
                 type: 'success',
-                message: '处理工单成功！'
+                message: res.data
               });
               that.DealProjectBtnState = true;
               that.dialogWorkFormVisible = false;
