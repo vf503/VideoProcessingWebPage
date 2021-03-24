@@ -351,12 +351,14 @@
           <el-option label="人社系统" value="人社系统"></el-option>
           <el-option label="学校系统" value="学校系统"></el-option>
           <el-option label="企业系统" value="企业系统"></el-option>
+          <el-option label="其他政府" value="其他政府"></el-option>
         </el-select>
         </el-col>
         <el-col :span="4">
           <el-select v-model="AddCustomerTypeExt" placeholder="请选择分类">
-            <el-option label="普通" value="普通"></el-option>
-            <el-option label="第三方" value="第三方"></el-option>
+            <el-option label="运营客户" value="运营客户"></el-option>
+            <el-option label="最终客户" value="最终客户"></el-option>
+            <el-option label="三方客户" value="三方客户"></el-option>
           </el-select>
         </el-col>
         <el-col :span="4">
@@ -612,6 +614,7 @@
             <el-select v-model="dealWorkFormSlideVideoType" placeholder="请选择类型" >
               <el-option label="标准" value=""></el-option>
               <el-option label="画中画" value="PIP"></el-option>
+              <el-option label="无首页" value="NoFirstSlide"></el-option>
             </el-select>
           </el-col>
         </el-row>
@@ -631,7 +634,26 @@
             <el-select v-model="dealWorkIsWaterMark" placeholder="请选择">
               <el-option label="不需要" value="none"></el-option>
               <el-option label="中经视频" value="zjsp"></el-option>
+              <el-option label="自定义" value="custom"></el-option>
             </el-select>
+          </el-col>
+          <el-col :span="4">
+            <el-upload
+              class="upload-demo"
+              action="https://jsonplaceholder.typicode.com/posts/"
+              :on-preview="handleWMPreview"
+              :on-remove="handleWMRemove"
+              :before-remove="beforeWMRemove"
+              multiple
+              :limit="1"
+              :on-exceed="handleWMExceed"
+              :file-list="WMfileList"
+              :http-request="uploadFile"
+              v-show="dealWorkIsWaterMark =='custom'?(showFormWorkCustomerId==''?false:true):false">
+              <el-button size="small" type="primary">点击上传</el-button>
+              <div slot="tip" class="el-upload__tip">只能上传png文件</div>
+              <img>
+            </el-upload>
           </el-col>
         </el-row>
         <el-row :gutter="20">
@@ -639,6 +661,11 @@
           <el-col :span="20">
             <el-radio v-model="dealWorkFormRename" label="1">是</el-radio>
             <el-radio v-model="dealWorkFormRename" label="0">否</el-radio>
+          </el-col>
+          <el-col :span="4">精品课分集:</el-col>
+          <el-col :span="20">
+            <el-radio v-model="dealWorkFormCut" label="1">是</el-radio>
+            <el-radio v-model="dealWorkFormCut" label="0">否</el-radio>
           </el-col>
         </el-row>
         <el-row :gutter="20">
@@ -651,6 +678,54 @@
               <el-checkbox label="summary">简介</el-checkbox>
               <el-checkbox label="lecturer">教师简介</el-checkbox>
             </el-checkbox-group>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="4">考题:
+          </el-col>
+          <el-col :span="5">
+            <el-select v-model="TestType" placeholder="请选择模板"  size="small" style="width: 150px;">
+              <el-option label="传统样式" value="0"></el-option>
+              <el-option label="北京干教网" value="4"></el-option>
+              <el-option label="拉萨组织部" value="1"></el-option>
+              <el-option label="山西交干院" value="2"></el-option>
+              <el-option label="水利部试题模板" value="3"></el-option>
+              <el-option label="天津港" value="5"></el-option>
+              <el-option label="JSON" value="json"></el-option>
+            </el-select>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="4">课件图片:
+          </el-col>
+          <el-col :span="3">
+            <el-select v-model="PIC"  size="small" style="width: 100px;">
+              <el-option label="不需要" value="false"></el-option>
+              <el-option label="需要" value="true"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="5">
+            <el-input type="text" v-model="PicW" style="width: 65px;" placeholder="宽" size="small" :disabled=" PIC=='false'?true:false"></el-input>
+            X <el-input type="text" v-model="PicH" style="width: 65px;" placeholder="高" size="small" :disabled=" PIC=='false'?true:false"></el-input>
+          </el-col>
+          <el-col :span="5">
+            <el-select v-model="PicType" placeholder="类型" size="small" :disabled=" PIC=='false'?true:false">
+              <el-option label="只有标题" value="1"></el-option>
+              <el-option label="标题、讲师" value="2"></el-option>
+              <el-option label="标题、讲师、职务" value="3"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="3">
+            <el-select v-model="PicApart" placeholder="分集" size="small" :disabled=" PIC=='false'?true:false">
+              <el-option label="是" value="true"></el-option>
+              <el-option label="否" value="false"></el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="3">
+            <el-select v-model="PicFormat" placeholder="格式" size="small" :disabled=" PIC=='false'?true:false">
+              <el-option label="PNG" value="png"></el-option>
+              <el-option label="JPG" value="jpg"></el-option>
+            </el-select>
           </el-col>
         </el-row>
         <el-row :gutter="20">
@@ -731,6 +806,7 @@
             <el-select v-model="dealOldWorkIsWaterMark" placeholder="请选择水印">
               <el-option label="不需要" value="none"></el-option>
               <el-option label="中经视频" value="zjsp"></el-option>
+              <el-option label="自定义" value="custom"></el-option>
             </el-select>
           </el-col>
           <el-col :span="2">
@@ -805,7 +881,7 @@
       <el-row :gutter="20">
         <el-col :span="3">是否有水印:</el-col>
         <el-col :span="20">
-          <el-radio v-model="ImportVideoWaterMark" label="true">是</el-radio>
+          <el-radio v-model="ImportVideoWaterMark" label="1">是</el-radio>
           <el-radio v-model="ImportVideoWaterMark" label="">否</el-radio>
         </el-col>
       </el-row>
@@ -997,12 +1073,20 @@
         dealWorkFormRatio: '',
         dealWorkFormNote: '',
         dealWorkFormRename: '1',
+        dealWorkFormCut: '1',
         dealWorkAttachmentList: [],
         dealWorkIsWaterMark: 'none',
         dealOldWorkFormRename: '1',
         dealOldWorkIsWaterMark: '',
         dealOldWorkFormRatio: '',
         dealOldWorkAttachmentList: [],
+        TestType:"none",
+        PIC:"false",
+        PicW:'',
+        PicH:'',
+        PicApart:"true",
+        PicType:'',
+        PicFormat:'',
         oldTemplate: [],
         oldTemplateVal: '',
         oldTemplate2012: [],
@@ -1031,11 +1115,13 @@
         OldHelpQueryBtnText: '查询发送结果',
         OldHelpQueryCount: 0,
         OldHelpQueryData: [],
+        WMFile: {},
+        WMfileList:[],
 
 
         /*导入视频变量*/
         dialogImportVideoVisible: false,
-        ImportVideoWaterMark: 'true',
+        ImportVideoWaterMark: '',
 
         /*从后台获取的供选择的模板信息*/
         videoModelForChoose: [],
@@ -1102,14 +1188,14 @@
               that.DealProjectNewVisible = true;
               that.DealProjectOldVisible = true;
               //
-              that.$http.get('http://lms.cei.cn/lms/myproducer/templates2/index.txt', {withCredentials: false}).then(function (res) {
+              that.$http.get('http://203.207.118.112/CourseFile/CourseTemplate/oldtemplate.txt', {withCredentials: false}).then(function (res) {
                 // console.log(res);
                 that.oldTemplate = res.data.split("\r\n");
                 //console.log(res.data.replace(new RegExp(/(\r\n)/g),'_'))
               }).catch(function (err) {
                 console.log(err)
               })
-              that.$http.get('http://lms.cei.cn/lms/myproducer/templates2013/index.txt', {withCredentials: false}).then(function (res) {
+              that.$http.get('http://203.207.118.112/CourseFile/CourseTemplate/oldtemplate2013.txt', {withCredentials: false}).then(function (res) {
                 // console.log(res);
                 that.oldTemplate2012 = res.data.split("\r\n");
               }).catch(function (err) {
@@ -1700,6 +1786,43 @@
       beforeRemove(file, fileList) {
         return this.$confirm(`确定移除 ${ file.name }？`);
       },
+      //
+      beforeWMUpload(file) {
+        //console.log('hit');
+        //const copyFile = new File([file], this.showFormWorkCustomerId)
+        return false
+      },
+      uploadFile(param) {
+        const formdata = new FormData()
+        formdata.append('', param.file)
+        formdata.append('name', this.showFormWorkCustomerId + ".png")
+        //formdata.append('_csrfToken', this.$ajax.getCsrfToken()._csrfToken)
+        console.log(formdata);
+        this.$axios({
+          method: 'post',
+          url: 'http://203.207.118.112/api/files/WaterMark',
+          //headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          data: formdata
+        }).then(
+          this.$message({
+          type: 'warning',
+          message: `图片已上传`
+        })
+        )
+      },
+      onWMFileChange(file) {
+        //console.log('hit');
+        this.WMFile = file;
+      },
+      handleWMRemove(file, WMfileList) {
+      },
+      handleWMPreview(file) {
+      },
+      handleWMExceed(files, WMfileList) {
+        this.$message.warning(`只能上传1个文件`);
+      },
+      beforeWMRemove(file, WMfileList) {
+      },
       //添加所选课程到新课旧课列表
       addSelected() {
         var that = this;
@@ -1797,6 +1920,7 @@
       exportNewExcel() {
         /* generate workbook object from table */
         //var wb = XLSX.utils.table_to_book(document.querySelector('#new_class_table'));
+        this.tableDataNew.sort(sortId);
         var ws = XLSX.utils.json_to_sheet(this.tableDataNew);
         var wb = new XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
@@ -1812,6 +1936,7 @@
       exportOldExcel() {
         /* generate workbook object from table */
         //var wb = XLSX.utils.table_to_book(document.querySelector('#old_class_table'));
+        this.tableDataOld.sort(sortId);
         var ws = XLSX.utils.json_to_sheet(this.tableDataOld);
         var wb = new XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
@@ -1827,6 +1952,7 @@
       exportAllExcel() {
         /* generate workbook object from table */
         //var ws = XLSX.utils.json_to_sheet(this.allTableData, {header:["CourseId", "title", "GroupName", "lecturer_name", "lecturer_post", "TempletType", "CreateDate", "DataType", "type", "creator", "progress", "duration"]});
+        this.allTableData.sort(sortId);
         var ws = XLSX.utils.json_to_sheet(this.allTableData);
         var wb = new XLSX.utils.book_new();
         //var wb;
@@ -1847,6 +1973,7 @@
         this.allTableChosen = []
         this.allTableChosen = this.allTableChosen.concat(this.tableDataNew)
         this.allTableChosen = this.allTableChosen.concat(this.tableDataOld)
+        this.allTableChosen.sort(sortId);
         var ws = XLSX.utils.json_to_sheet(this.allTableChosen);
         var wb = new XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
@@ -2161,9 +2288,10 @@
       EditCourse(row) {
         var login = encodeURIComponent(this.encode64(this.userName + '_' + this.userPassword));
         //console.log(this.userName+'_'+this.userPassword);
-        var url = 'SlideEdit';
+        //var url = 'SlideEdit';
+        var url = 'CourseUpload';
         console.log(row.TempletType);
-        if (row.TempletType === '精品单视频'|| row.TempletType === '单视频' || row.TempletType === '精品名家课') {
+        if (row.TempletType === '精品单视频'|| row.TempletType === '单视频' || row.TempletType === '精品名家课'|| row.TempletType === '微课') {
           url = 'CourseUpload';
         }
         if (row.SourceCourseId != '' && row.SourceCourseId && typeof(row.SourceCourseId) != 'undefined') {
@@ -2331,7 +2459,7 @@
               "SlideVideoOP":that.newWorkFormSlideVideoOP,
               "AttText": IsInArray(that.newWorkAttachmentList, 'text').toString(),
               "AttPPT": IsInArray(that.newWorkAttachmentList, 'ppt').toString(),
-              "AttTest": IsInArray(that.newWorkAttachmentList, 'test').toString(),
+              "AttTest":IsInArray(that.newWorkAttachmentList, 'test').toString(),
               "AttSummary": IsInArray(that.newWorkAttachmentList, 'summary').toString(),
               "AttLecturer": IsInArray(that.newWorkAttachmentList, 'lecturer').toString()
             },
@@ -2388,20 +2516,40 @@
         if (that.dealWorkFormSlideVideo != "none") {
           TaskPriority = "D";
         }
+        var TestType='';
+        if(that.TestType==="none")
+        {
+          TestType=IsInArray(that.dealWorkAttachmentList, 'test').toString();
+        }
+        else{
+          TestType="True_"+that.TestType;
+        }
+        var WaterMark=that.dealWorkIsWaterMark;
+          if(that.dealWorkIsWaterMark==="custom")
+          {
+            WaterMark=that.showFormWorkCustomerId;
+          }
         var extendedData = {
           "template": that.dealWorkFormModel,
           "TemplateType":that.dealWorkFormModelType,
           "DisplaySize": that.dealWorkFormRatio,
           "rename": that.dealWorkFormRename,
-          "WaterMark": that.dealWorkIsWaterMark,
+          "cut":that.dealWorkFormCut,
+          "WaterMark": WaterMark,
           "AttText": IsInArray(that.dealWorkAttachmentList, 'text'),
           "AttPPT": IsInArray(that.dealWorkAttachmentList, 'ppt'),
-          "AttTest": IsInArray(that.dealWorkAttachmentList, 'test'),
+          "AttTest": TestType,
           "AttSummary": IsInArray(that.dealWorkAttachmentList, 'summary'),
           "AttLecturer": IsInArray(that.dealWorkAttachmentList, 'lecturer'),
           "SlideVideo": SlideVideo,
           "SlideVideoType": that.dealWorkFormSlideVideoType,
-          "SlideVideoOP": that.dealWorkFormSlideVideoOP
+          "SlideVideoOP": that.dealWorkFormSlideVideoOP,
+          "PIC":JSON.parse(that.PIC),
+          "PicW":that.PicW,
+          "PicH":that.PicH,
+          "PicApart":JSON.parse(that.PicApart),
+          "PicType":that.PicType===''?'none':that.PicType,
+          "PicFormat":that.PicFormat===''?'none':that.PicFormat
         };
         extendedData = JSON.stringify(extendedData);
         this.$axios({
@@ -2455,11 +2603,16 @@
             OldCourseIdList.push({"id": item.CourseId, "title": item.title, "type": item.TempletType});
           });
           var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
+          var WaterMark=that.dealOldWorkIsWaterMark;
+          if(that.dealOldWorkIsWaterMark==="custom")
+          {
+            WaterMark=that.showFormWorkCustomerId;
+          }
           var extendedData = {
             "template": that.oldTemplateVal,
             "template2012": that.oldTemplate2012Val,
             "DisplaySize": '',
-            "WaterMark": that.dealOldWorkIsWaterMark,
+            "WaterMark": WaterMark,
             "rename": that.dealOldWorkFormRename,
             "AttText": IsInArray(that.dealOldWorkAttachmentList, 'text'),
             "AttPPT": IsInArray(that.dealOldWorkAttachmentList, 'ppt'),
@@ -2800,9 +2953,14 @@
           SubmitList.push({"id": item.CourseId, "title": item.title, "type": item.TempletType});
         });
         var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
+        var WaterMark=that.dealOldWorkIsWaterMark;
+        if(that.dealOldWorkIsWaterMark==="custom")
+        {
+          WaterMark=that.showFormWorkCustomerId;
+        }
         var extendedData = {
           "DisplaySize": that.dealOldWorkFormRatio,
-          "WaterMark": that.dealOldWorkIsWaterMark,
+          "WaterMark": WaterMark,
           "CourseList": SubmitList
         };
         extendedData = JSON.stringify(extendedData);
@@ -3001,6 +3159,9 @@
       jsonLength++;
     }
     return jsonLength;
+  }
+  function sortId(a,b){
+    return a.CourseId - b.CourseId
   }
   //
 </script>

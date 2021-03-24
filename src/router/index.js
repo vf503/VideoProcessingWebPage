@@ -4,7 +4,7 @@ import HomePage from '@/components/HomePage'
 import LoginPage from '@/components/LoginPage'
 import TaskList from '@/components/TaskList'
 import CustomerEdit from '@/components/CustomerEdit'
-
+import SelectCourse from '@/components/SelectCourse'
 
 Vue.use(Router)
 
@@ -30,6 +30,11 @@ export default new Router({
       path: '/CustomerEdit',
       name: 'CustomerEdit',
       component: CustomerEdit
+    },
+    {
+      path: '/SelectCourse',
+      name: 'SelectCourse',
+      component: SelectCourse
     }
   ]
 })

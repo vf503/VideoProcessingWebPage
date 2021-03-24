@@ -1,10 +1,10 @@
 <template>
   <div class="main-div">
     <app-head @getMenuIndex="getMenuIndexVal"></app-head>
-    <div style="margin: 20px 10px 10px 10px">
-      <el-button type="primary" size="mini" @click="dialogCityVisible=true" disabled>编辑城市选项</el-button>
+    <div style="margin: 20px 10px 0px 10px">
+      <!--<el-button type="primary" size="mini" @click="dialogCityVisible=true" disabled>编辑城市选项</el-button>-->
     </div>
-    <div style="margin: 20px 10px 10px 10px">
+    <div style="margin: 20px 10px 0px 10px">
       <el-input
         v-model="CustomerSearch"
         placeholder="名称搜索"
@@ -12,6 +12,95 @@
       >
     </el-input>
       <el-button type="primary" size="mini" @click="search">搜索</el-button>
+      <div style="margin-top: 10px">
+      <span style="font-size: 12px;color: #6f7180;">类型: </span>
+      <el-tag
+        v-for="item in OptionsSort"
+        :key="item.value"
+        :effect="SearchSort==item.value?'dark':'light'"
+        @click.native="SearchSortChange(item)"
+        style="margin: 0 0 0 10px"
+        size="mini"
+      >
+        {{ item.label }}
+      </el-tag>
+        <span style="font-size: 12px;color: #6f7180;margin-left: 50px">性质: </span>
+        <el-tag
+          v-for="item in OptionsSortExt"
+          :key="item.value"
+          :effect="SearchSortExt==item.value?'dark':'light'"
+          @click.native="SearchSortExtChange(item)"
+          style="margin: 0 0 0 10px"
+          size="mini"
+        >
+          {{ item.label }}
+        </el-tag>
+        <span style="font-size: 12px;color: #6f7180;margin-left: 50px">合作状态: </span>
+        <el-tag
+          v-for="item in OptionsState"
+          :key="item.value"
+          :effect="SearchState==item.value?'dark':'light'"
+          @click.native="SearchStateChange(item)"
+          style="margin: 0 0 0 10px"
+          size="mini"
+        >
+          {{ item.label }}
+        </el-tag>
+      </div>
+      <div style="margin-top: 0px">
+        <span style="font-size: 12px;color: #6f7180;margin: 10px 0 0 0;display:block;float: left; height: 58px">省份: </span>
+        <el-tag
+          v-for="item in OptionsProvince"
+          :key="item.value"
+          :effect="SearchProvince==item.value?'dark':'light'"
+          @click.native="SearchProvinceChange(item)"
+          style="margin: 10px 0 0 10px"
+          size="mini"
+        >
+          {{ item.label }}
+        </el-tag>
+      </div>
+      <div style="margin-top: 0px;clear: both">
+        <span style="font-size: 12px;color: #6f7180;margin: 0px 0 0 0;">区域: </span>
+        <el-tag
+        :effect="SearchArea=='n'?'dark':'light'"
+        @click.native="SearchAreaChange('n')"
+        style="margin: 0px 0 0 10px"
+        size="mini"
+      >北方</el-tag>
+        <el-tag
+          :effect="SearchArea=='s'?'dark':'light'"
+          @click.native="SearchAreaChange('s')"
+          style="margin: 0px 0 0 10px"
+          size="mini"
+        >南方</el-tag>
+        <span style="font-size: 12px;color: #6f7180;margin: 0px 0 0 50px;">是/否新增客户: </span>
+        <el-tag
+          :effect="SearchIsNew=='是'?'dark':'light'"
+          @click.native="SearchIsNewChange('是')"
+          style="margin: 0px 0 0 10px"
+          size="mini"
+        >是</el-tag>
+        <el-tag
+          :effect="SearchIsNew=='否'?'dark':'light'"
+          @click.native="SearchIsNewChange('否')"
+          style="margin: 0px 0 0 10px"
+          size="mini"
+        >否</el-tag>
+      </div>
+      <div style="margin-top: 0px">
+        <span style="font-size: 12px;color: #6f7180;margin: 10px 0 0 0;display:block;float: left; height: 58px">销售: </span>
+        <el-tag
+          v-for="item in seller"
+          :key="item.id"
+          :effect="SearchSeller==item.id+''?'dark':'light'"
+          @click.native="SearchSellerChange(item)"
+          style="margin: 10px 0 0 10px"
+          size="mini"
+        >
+          {{ item.first_name }}
+        </el-tag>
+      </div>
     </div>
     <el-table
       :data="CustomerData.slice((currentPage-1)*pageSize,currentPage*pageSize)"
@@ -228,6 +317,13 @@
           OptionsCurrentCity:[],
           seller:[],
           CustomerSearch: '',
+          SearchSort:'',
+          SearchSortExt:'',
+          SearchState:'',
+          SearchProvince:'',
+          SearchArea:'',
+          SearchIsNew:'',
+          SearchSeller:'',
           CurrentRow:{},
           //
           total:0,//默认数据总数
@@ -303,10 +399,19 @@
           var that =this;
           axios.get('http://newpms.cei.cn/customer/', {headers: {'Authorization': 'JWT ' + this.MyToken}})
             .then(function (response) {
-              that.CustomerData=response.data;
+              //that.CustomerData=response.data;
+              that.CustomerData=that.null2str(response.data);
               that.CustomerData=that.CustomerData.filter(data => !that.CustomerSearch || data.name.toLowerCase().includes(that.CustomerSearch.toLowerCase()))
+                .filter(data => !that.SearchSort || data.sort.toLowerCase().includes(that.SearchSort.toLowerCase()))
+                .filter(data => !that.SearchSortExt || data.sortExt.includes(that.SearchSortExt.toLowerCase()))
+                .filter(data => !that.SearchState || data.state.includes(that.SearchState.toLowerCase()))
+                .filter(data => !that.SearchProvince || data.province.includes(that.SearchProvince.toLowerCase()))
+                .filter(data => !that.SearchArea || data.area.toLowerCase().includes(that.SearchArea.toLowerCase()))
+                .filter(data => !that.SearchIsNew || data.IsNew.includes(that.SearchIsNew.toLowerCase()))
+                .filter(data => !that.SearchSeller || Number(data.seller)==that.SearchSeller)
               that.total= that.CustomerData.length
               })
+          this.currentPage=1;
         },
         edit(row, index) {
           if( !row.IsEdit === true){
@@ -316,6 +421,12 @@
           if( row.IsEdit === true)
           {
             var that = this;
+            var ThisSeller=null;
+            if (row.seller =='')
+            {
+
+            }
+            else{ ThisSeller=row.seller }
             this.$axios({
               method: 'post',
               url: 'http://newpms.cei.cn/customerdetail/',
@@ -324,17 +435,17 @@
                 "id":row.id,
                 "name": row.name,
                 "sort": row.sort,
-                "sortExt": row.sortExt,
+                "sortExt": row.sortExt==''?null:row.sortExt,
                 "area": row.area,
-                "income":row.income,
-                "state":row.state,
-                "province":row.province,
-                "city":row.city,
-                "IsThirdTParty":row.IsThirdTParty,
-                "IsNew":row.IsNew,
-                "StartDate":row.StartDate,
-                "EndDate":row.EndDate,
-                "seller":row.seller
+                "income":row.income==''?null:row.income,
+                "state":row.state==''?null:row.state,
+                "province":row.province==''?null:row.province,
+                "city":row.city==''?null:row.city,
+                "IsThirdTParty":row.IsThirdTParty==''?null:row.IsThirdTParty,
+                "IsNew":row.IsNew==''?null:row.IsNew,
+                "StartDate":row.StartDate==''?null:row.StartDate,
+                "EndDate":row.EndDate==''?null:row.EndDate,
+                "seller":ThisSeller
               }
             }).then(function (res) {
               console.log(res);
@@ -427,13 +538,77 @@
         handleCurrentChange(val) {
           // 改变默认的页数
           this.currentPage=val;
-          this.search();
+          //this.search();
         },
         handleSizeChange(val) {
           // 改变每页显示的条数
           this.pageSize=val
           // 注意：在改变每页显示的条数时，要将页码显示到第一页
           this.currentPage=1
+        },
+        SearchSortChange(thisTag){
+          if(this.SearchSort==thisTag.value){
+            this.SearchSort="";
+          }
+          else{
+          this.SearchSort=thisTag.value;
+          }
+          this.search();
+        },
+        SearchSortExtChange(thisTag){
+          if(this.SearchSortExt==thisTag.value){
+            this.SearchSortExt="";
+          }
+          else{
+            this.SearchSortExt=thisTag.value;
+          }
+          this.search();
+          console.log(this.SearchSortExt)
+        },
+        SearchStateChange(thisTag){
+          if(this.SearchState==thisTag.value){
+            this.SearchState="";
+          }
+          else{
+            this.SearchState=thisTag.value;
+          }
+          this.search();
+        },
+        SearchProvinceChange(thisTag){
+      if(this.SearchProvince==thisTag.value){
+        this.SearchProvince="";
+      }
+      else{
+        this.SearchProvince=thisTag.value;
+      }
+      this.search();
+    },
+        SearchAreaChange(thisTag){
+          if(this.SearchArea==thisTag){
+            this.SearchArea="";
+          }
+          else{
+            this.SearchArea=thisTag;
+          }
+          this.search();
+        },
+        SearchIsNewChange(thisTag){
+          if(this.SearchIsNew==thisTag){
+            this.SearchIsNew="";
+          }
+          else{
+            this.SearchIsNew=thisTag;
+          }
+          this.search();
+        },
+        SearchSellerChange(thisTag){
+          if(this.SearchSeller==thisTag.id+""){
+            this.SearchSeller="";
+          }
+          else{
+            this.SearchSeller=thisTag.id+"";
+          }
+          this.search();
         },
         getRequest() {
           var url = unescape(window.location.href); //获取url中"?"符后的字串
@@ -495,8 +670,25 @@
             }
           }
           return string;
-        }
+        },
         // base 64 ED
+        null2str(data) {
+          for (let x in data) {
+            if (data[x] === null) { // 如果是null 把直接内容转为 ''
+              data[x] = '';
+            } else {
+              if (Array.isArray(data[x])) { // 是数组遍历数组 递归继续处理
+                data[x] = data[x].map(z => {
+                  return this.null2str(z);
+                });
+              }
+              if (typeof(data[x]) === 'object') { // 是json 递归继续处理
+                data[x] = this.null2str(data[x])
+              }
+            }
+          }
+          return data;
+        }
       }
     }
 </script>
