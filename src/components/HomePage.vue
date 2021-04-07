@@ -394,6 +394,14 @@
                 <el-option label="只要片头" value="OnlyOP"></el-option>-->
           </el-select>
         </el-col>
+        <el-col :span="2">水印:</el-col>
+        <el-col :span="4">
+          <el-select v-model="newWorkIsWaterMark" placeholder="请选择">
+            <el-option label="不需要" value="不需要"></el-option>
+            <el-option label="自定义" value="自定义"></el-option>
+            <el-option label="中经视频" value="中经视频"></el-option>
+          </el-select>
+        </el-col>
       </el-row>
       <el-row :gutter="20">
         <el-col :span="3">输出视频:</el-col>
@@ -418,6 +426,7 @@
         <el-col :span="4">
           <el-select v-model="newWorkIsWaterMark" placeholder="请选择">
             <el-option label="不需要" value="不需要"></el-option>
+            <el-option label="自定义" value="自定义"></el-option>
             <el-option label="中经视频" value="中经视频"></el-option>
           </el-select>
         </el-col>
@@ -613,6 +622,7 @@
           <el-col :span="6">
             <el-select v-model="dealWorkFormSlideVideoType" placeholder="请选择类型" >
               <el-option label="标准" value=""></el-option>
+              <el-option label="不分集" value="NoSplit"></el-option>
               <el-option label="画中画" value="PIP"></el-option>
               <el-option label="无首页" value="NoFirstSlide"></el-option>
             </el-select>
@@ -1289,6 +1299,8 @@
                   }
                   if (typeof(workFormInfo.require.SlideVideo) != "undefined" && workFormInfo.require.SlideVideo != "none") {
                     that.showFormWorkRequire += "混剪MP4：需要;" + workFormInfo.require.SlideVideo + ";";
+                    that.showFormWorkRequire += "水印：";
+                    that.showFormWorkRequire += workFormInfo.require.IsWaterMark + ";";
                     if(typeof(workFormInfo.require.SlideVideoOP) === "undefined")
                     {
                       that.showFormWorkRequire +="有片头片尾;\n\r";

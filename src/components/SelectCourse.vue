@@ -11,7 +11,8 @@
         <el-button type="primary" class="search-btn" @click="selectClassWord">查询</el-button>
       </el-card>
       <el-card class="box-card">
-        <div>工单信息</div>
+        <div></div>
+        <div>{{ProjectId}}</div>
       </el-card>
     </div>
     <div style="float: left;clear: left;width: 47%;margin: 10px 0px 0 35px">
@@ -77,6 +78,9 @@
           <div class="search-table-head">
             <span>选中列表</span>
           </div>
+          <div>
+            <el-button type="primary" @click="SubmitSelected">提交</el-button>
+          </div>
           <div class="new-class-table">
             <el-table id="new_class_table" :data="allTableChosen" tooltip-effect="dark" max-height="1200">
               <el-table-column type="index" width="55"></el-table-column>
@@ -106,6 +110,10 @@
       name: "SelectCourse",
       data() {
         return {
+          ProjectId:"",
+          title:"",
+          lecturer:"",
+          post:"",
           className:"",
           classGroup:"",
           classTeacher:"",
@@ -128,7 +136,11 @@
           Request2 = this.getRequest2();
           this.keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
           var modeLogin = this.decode(Request["login"]);
-          var projectId = Request2["project"];
+          this.ProjectId = Request2["project"];
+          this.title = Request2["title"];
+          this.lecturer = Request2["lecturer"];
+          this.post = Request2["post"];
+          console.log(Request2["project"]);
           var modeUserName = modeLogin.split('_')[0];
           var modePassword = modeLogin.split('_')[1];
           this.userName = modeUserName;
@@ -313,6 +325,27 @@
             });
           });
 
+        },
+        SubmitSelected(){
+          var that = this;
+            this.$axios({
+              method: 'post',
+              url: "http://newpms.cei.cn/EditSectionsCourses/?project="+this.ProjectId+"&title="+this.title+"&lecturer="+this.lecturer+"&post="+this.post+"&user="+this.userName,
+              data:  this.allTableChosen
+            }).then(function (res) {
+              if (res.status == 200) {
+                that.$message({
+                  type: 'success',
+                  message: '已保存'
+                });
+              }
+            }).catch(function (err) {
+              that.$message({
+                type: 'warning',
+                message: '错误！'
+              });
+              console.log(err);
+            });
         },
         PlayCourse(row) {
           if (row.DataType == '新课件') {
