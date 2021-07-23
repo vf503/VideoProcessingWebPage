@@ -32,7 +32,7 @@
             range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
-            :default-time="['00:00:00', '23:59:59']"
+            :default-time="['00:00:00', '00:00:00']"
             :picker-options="RangePickerOptions">
           </el-date-picker>
           <el-select v-model="publishType" style="width: 153px" placeholder="选择版面">
@@ -607,8 +607,9 @@
             <el-select v-model="dealWorkFormSlideVideo" placeholder="请选择类型">
               <el-option label="不需要" value="none"></el-option>
               <el-option label="1280*720" value="1280*720"></el-option>
-              <el-option label="720*576" value="720*576"></el-option>
+              <!--<el-option label="720*576" value="720*576"></el-option>-->
               <el-option label="640*360" value="640*360"></el-option>
+              <el-option label="1280*720 400K" value="1280:720_336k"></el-option>
             </el-select>
           </el-col>
           <el-col :span="6">
@@ -625,6 +626,7 @@
               <el-option label="不分集" value="NoSplit"></el-option>
               <el-option label="画中画" value="PIP"></el-option>
               <el-option label="无首页" value="NoFirstSlide"></el-option>
+              <el-option label="带模板" value="HTML"></el-option>
             </el-select>
           </el-col>
         </el-row>
@@ -637,6 +639,7 @@
               <el-option label="640*360" value="640*360"></el-option>
               <el-option label="720*576" value="720*576"></el-option>
               <el-option label="1280*720" value="1280*720"></el-option>
+              <el-option label="1280*720 400K" value="1280:720_336k"></el-option>
             </el-select>
           </el-col>
           <el-col :span="2">水印:</el-col>
@@ -695,12 +698,16 @@
           </el-col>
           <el-col :span="5">
             <el-select v-model="TestType" placeholder="请选择模板"  size="small" style="width: 150px;">
+              <el-option label="无" value="none"></el-option>
               <el-option label="传统样式" value="0"></el-option>
               <el-option label="北京干教网" value="4"></el-option>
               <el-option label="拉萨组织部" value="1"></el-option>
               <el-option label="山西交干院" value="2"></el-option>
-              <el-option label="水利部试题模板" value="3"></el-option>
+              <el-option label="水利部" value="3"></el-option>
               <el-option label="天津港" value="5"></el-option>
+              <el-option label="河北军转" value="6"></el-option>
+              <el-option label="甘肃" value="7"></el-option>
+              <el-option label="南京人设" value="8"></el-option>
               <el-option label="JSON" value="json"></el-option>
             </el-select>
           </el-col>
@@ -727,8 +734,8 @@
           </el-col>
           <el-col :span="3">
             <el-select v-model="PicApart" placeholder="分集" size="small" :disabled=" PIC=='false'?true:false">
-              <el-option label="是" value="true"></el-option>
-              <el-option label="否" value="false"></el-option>
+              <el-option label="分集" value="true"></el-option>
+              <el-option label="不分" value="false"></el-option>
             </el-select>
           </el-col>
           <el-col :span="3">
@@ -741,7 +748,41 @@
         <el-row :gutter="20">
           <el-col :span="20">&nbsp;</el-col>
           <el-col :span="4">
-            <el-button type="primary" @click="submitDealNew" :disabled="DealNewBtnState">{{DealNewBtnText}}</el-button>
+            <el-button type="primary" @click="submitDealNew('all')" :disabled="DealNewBtnState">{{DealNewBtnText}}</el-button>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="4">发布 :
+          </el-col>
+          <el-col :span="8">
+            <el-select v-model="dealWorkPublishTarget" placeholder="选择平台" size="mini" >
+              <el-option label="ACA" value="ACA"></el-option>
+            </el-select>
+            <el-button size="mini" type="primary" plain round @click="PublishQuery">预处理</el-button>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20" v-show="IsPublishQuery">
+          <el-col :span="4">未发布:</el-col>
+          <el-col :span="2">
+            <el-button size="mini" type="primary" round @click="ShowNoPublishCount">{{ NoPublishCount }}</el-button>
+          </el-col>
+          <el-col :span="8">
+            _
+          </el-col>
+          <el-col :span="2">
+            <el-button size="small" type="primary" @click="submitDealNew('np')" :disabled="DealNewBtnNoPublish">发布</el-button>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20" v-show="IsPublishQuery">
+          <el-col :span="4">已发布:</el-col>
+          <el-col :span="2">
+            <el-button size="mini" type="primary" round @click="ShowPublishCount">{{ PublishCount }}</el-button>
+          </el-col>
+          <el-col :span="8">
+            _
+          </el-col>
+          <el-col :span="2">
+            <el-button size="small" type="primary" @click="submitDealNew('p')" :disabled="DealNewBtnPublish">发布</el-button>
           </el-col>
         </el-row>
       </el-card>
@@ -790,7 +831,16 @@
         <el-row :gutter="20">
           <el-col :span="20">&nbsp;</el-col>
           <el-col :span="4">
-            <el-button type="primary" @click="submitDealOld" :disabled="DealOldBtnState">{{DealOldBtnText}}</el-button>
+            <el-button type="primary" @click="submitDealOld('all')" :disabled="DealOldBtnState">{{DealOldBtnText}}</el-button>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="4">发布:</el-col>
+          <el-col :span="12">
+            <el-select v-model="dealWorkPublishTarget" placeholder="选择平台" size="mini" >
+              <el-option label="ACA" value="ACA"></el-option>
+            </el-select>
+            <el-button size="mini" type="primary"  @click="submitDealOld('p')" :disabled="DealOldBtnPublish">发布</el-button>
           </el-col>
         </el-row>
         <el-row :gutter="20">
@@ -810,6 +860,7 @@
               <el-option label="1280*720 原片" value="1280*720"></el-option>
               <el-option label="1280*720 2M" value="1280*720_2M"></el-option>
               <el-option label="1280*720 1M" value="1280*720_1M"></el-option>
+              <el-option label="1280*720 400K" value="1280:720_336k"></el-option>
             </el-select>
           </el-col>
           <el-col :span="4">
@@ -901,6 +952,20 @@
           <el-button type="primary" @click="submitImportVideo">提交任务</el-button>
         </el-col>
       </el-row>
+    </el-dialog>
+    <el-dialog :visible.sync="dialogPublishListVisible" class="new-course-config" width="1000">
+      <el-table ref="multipleTable" :data="PublishTableData" id="publish_table" max-height="800" :default-sort="{prop: 'title', order: 'descending'}">
+        <el-table-column prop="CourseId" label="编号" sortable>
+        </el-table-column>
+        <el-table-column prop="CreateDate" label="日期" width="100" sortable>
+        </el-table-column>
+        <el-table-column prop="title" label="题目">
+        </el-table-column>
+        <el-table-column prop="lecturer_name" label="讲师" width="70">
+        </el-table-column>
+        <el-table-column prop="TempletType" label="类型" width="70">
+        </el-table-column>
+      </el-table>
     </el-dialog>
   </div>
 </template>
@@ -1048,8 +1113,11 @@
         /*处理工单-展示工单的变量*/
         DealProjectVisible: false,
         DealNewBtnState: false,
+        DealNewBtnPublish: false,
+        DealNewBtnNoPublish: false,
         DealNewBtnText: '确定下载',
         DealOldBtnState: false,
+        DealOldBtnPublish: false,
         DealOldBtnText: '确定下载',
         DealProjectBtnState: true,
         DealProjectBtnText: '工单完成',
@@ -1127,6 +1195,14 @@
         OldHelpQueryData: [],
         WMFile: {},
         WMfileList:[],
+        dealWorkPublishTarget:"ACA",
+        IsPublishQuery:false,
+        NoPublishCount:0,
+        PublishCount:0,
+        dialogPublishListVisible:false,
+        NoPublishData:[],
+        PublishData:[],
+        PublishTableData:[],
 
 
         /*导入视频变量*/
@@ -1583,13 +1659,16 @@
         this.loadingAll = true;
         this.currentShowTableData = [];
         this.allTableData = [];
+        var EndDate = new Date();
+        EndDate=this.classDate[1];
+        EndDate.setDate(EndDate.getDate()+1);
         console.log(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss"));
         var that = this;
         var urlNew = "http://newpms.cei.cn/course/FieldQuery/" +
           "?title=" + encodeURIComponent(this.className) + "&lecturer=" + encodeURIComponent(this.classTeacher)
           + "&key=" + encodeURIComponent(this.classKeyword) + "&type=" + encodeURIComponent(this.videoType) + "&group=" + encodeURIComponent(this.classGroup)
           + "&source=" + encodeURIComponent(this.isEspecialClass) + "&start=" + encodeURIComponent(this.classDate[0].Format("yyyy-MM-dd HH:mm:ss"))
-          + "&end=" + encodeURIComponent(this.classDate[1].Format("yyyy-MM-dd HH:mm:ss")) + "&sheet=" + encodeURIComponent(this.publishType) + "&area=" + encodeURIComponent(this.userArea);
+          + "&end=" + encodeURIComponent(EndDate.Format("yyyy-MM-dd HH:mm:ss")) + "&sheet=" + encodeURIComponent(this.publishType) + "&area=" + encodeURIComponent(this.userArea);
         // console.log(urlNew);
         var urlOld = "http://newpms.cei.cn/OldCourseQuery/" +
           "?title=" + encodeURIComponent(this.className) + "&lecturer=" + encodeURIComponent(this.classTeacher) +
@@ -1932,18 +2011,38 @@
       exportNewExcel() {
         /* generate workbook object from table */
         //var wb = XLSX.utils.table_to_book(document.querySelector('#new_class_table'));
-        this.tableDataNew.sort(sortId);
-        var ws = XLSX.utils.json_to_sheet(this.tableDataNew);
-        var wb = new XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-        /* get binary string as output */
-        var wbout = XLSX.write(wb, {bookType: 'xlsx', bookSST: true, type: 'array'});
-        try {
-          FileSaver.saveAs(new Blob([wbout], {type: 'application/octet-stream'}), '新课列表.xlsx')
-        } catch (e) {
-          if (typeof console !== 'undefined') console.log(e, wbout)
-        }
-        return wbout;
+        var that=this;
+        var NewData=[];
+        this.tableDataNew.forEach(function(value,index,array)
+        {
+            var url = "http://newpms.cei.cn/course/FieldQueryExacted/" +
+              "?field=id&val=" + value.CourseId;
+          $.ajaxSettings.async = true;
+          that.$http.get(url, {headers: {'Authorization': 'JWT ' + that.myToken}})
+            .then(function (response) {
+              response.data.forEach(function (item) {
+                item.DataType = "新课件";
+                NewData.push(item);
+                if (NewData.length==that.tableDataNew.length)
+                {
+                  //this.tableDataNew.sort(sortId);
+                  NewData.sort(sortId);
+                  var ws = XLSX.utils.json_to_sheet(NewData);
+                  var wb = new XLSX.utils.book_new();
+                  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+                  /* get binary string as output */
+                  var wbout = XLSX.write(wb, {bookType: 'xlsx', bookSST: true, type: 'array'});
+                  try {
+                    FileSaver.saveAs(new Blob([wbout], {type: 'application/octet-stream'}), '新课列表.xlsx')
+                  } catch (e) {
+                    if (typeof console !== 'undefined') console.log(e, wbout)
+                  }
+                  return wbout;
+                }
+              });
+            })
+        });
+        //
       },
       exportOldExcel() {
         /* generate workbook object from table */
@@ -2509,15 +2608,32 @@
         * "CourseData":[{"id":"1","type":"new","title":"XXX"},{"id":"2","type":"old"},{"id":"3","type":"new"}]
         * }*/
       },
-      submitDealNew() {
+      submitDealNew(e) {
         var that = this;
+        console.log(e);
         var showFormWorkAllCourseDataIds = [];
         //this.showFormWorkAllCourseData.forEach(function (item) {
+        if(e=="all")
+        {
         this.tableDataNew.forEach(function (item) {
           if (item.DataType == '新课件') {
             showFormWorkAllCourseDataIds.push(item.CourseId);
           }
         });
+        }
+        else if (e=="np")
+        {
+          this.NoPublishData.forEach(function (item) {
+            showFormWorkAllCourseDataIds.push(item.CourseId);
+          });
+        }
+        else if(e=="p")
+        {
+          this.PublishData.forEach(function (item) {
+            showFormWorkAllCourseDataIds.push(item.CourseId);
+          });
+        }
+        else{}
         var myDealWorkFormTokenUrl = 'http://newpms.cei.cn/edittask/';
         var dealNote = "无";
         if (that.dealWorkFormNote) {
@@ -2561,8 +2677,14 @@
           "PicH":that.PicH,
           "PicApart":JSON.parse(that.PicApart),
           "PicType":that.PicType===''?'none':that.PicType,
-          "PicFormat":that.PicFormat===''?'none':that.PicFormat
+          "PicFormat":that.PicFormat===''?'none':that.PicFormat,
+          "PublishTarget":that.dealWorkPublishTarget
         };
+          if(e=="np"||e=="p")
+          {
+            extendedData.template="publish";
+            extendedData.DisplaySize="640*360";
+          }
         extendedData = JSON.stringify(extendedData);
         this.$axios({
           method: 'post',
@@ -2583,8 +2705,18 @@
               type: 'success',
               message: '任务已添加'
             });
+            if(e=="all"){
             that.DealNewBtnState = true;
             that.DealNewBtnText = '任务已添加';
+            }
+            else if(e=="np")
+            {
+              that.DealNewBtnNoPublish = true;
+            }
+            else if(e=="p")
+            {
+              that.DealNewBtnPublish = true;
+            }
           } else if (res.status == 204) {
             that.$message({
               type: 'warning',
@@ -2600,7 +2732,7 @@
           console.log(err);
         });
       },
-      submitDealOld() {
+      submitDealOld(e) {
         var that = this;
         if ((that.oldTemplateVal == "" && that.oldTemplate2012Val != "") || (that.oldTemplateVal != "" && that.oldTemplate2012Val == "")) {
           that.$message({
@@ -2631,8 +2763,16 @@
             "AttTest": IsInArray(that.dealOldWorkAttachmentList, 'test'),
             "AttSummary": IsInArray(that.dealOldWorkAttachmentList, 'summary'),
             "AttLecturer": IsInArray(that.dealOldWorkAttachmentList, 'lecturer'),
-            "CourseList": OldCourseIdList
+            "CourseList": OldCourseIdList,
+            "PublishTarget":that.dealWorkPublishTarget
           };
+          if(e=="p")
+          {
+            extendedData.template="publish";
+            extendedData.template2012="publish";
+            extendedData.DisplaySize="640*360";
+            extendedData.rename=0;
+          }
           extendedData = JSON.stringify(extendedData);
           var dealNote = "无";
           if (that.dealOldWorkFormNote) {
@@ -2656,8 +2796,15 @@
                 type: 'success',
                 message: '任务已添加'
               });
-              that.DealOldBtnState = true;
-              that.DealOldBtnText = '任务已添加';
+              if(e=="all")
+              {
+                that.DealOldBtnState = true;
+                that.DealOldBtnText = '任务已添加';
+              }
+              if(e=="p")
+              {
+                that.DealOldBtnPublish = true;
+              }
             } else if (res.status == 204) {
               that.$message({
                 type: 'warning',
@@ -3139,6 +3286,52 @@
       ShowOldHelpCount() {
         this.OldVideoTableData = this.OldHelpQueryData;
         this.dialogOldVideoListVisible = true;
+      },
+      PublishQuery() {
+        var that = this;
+        var url = 'http://newpms.cei.cn/PublishQuery/';
+        this.$axios({
+          method: 'post',
+          url: url,
+          headers: {'Authorization': 'JWT ' + that.myToken},
+          data: {
+            "CourseList": that.tableDataNew,
+            "target":that.dealWorkPublishTarget
+          }
+        }).then(function (res) {
+          console.log(res);
+          if (res.status == 200) {
+            that.$message({
+              type: 'success',
+              message: '查询成功'
+            });
+            that.NoPublishData = res.data.NoPublishList;
+            that.PublishData = res.data.PublishDataList;
+            that.NoPublishCount = getJsonLength(that.NoPublishData);
+            that.PublishCount = getJsonLength(that.PublishData);
+            that.IsPublishQuery = true;
+          } else if (res.status == 204) {
+            that.$message({
+              type: 'warning',
+              message: ''
+            });
+            //that.dialogWorkFormVisible = false;
+          }
+        }).catch(function (err) {
+          that.$message({
+            type: 'warning',
+            message: '错误！'
+          });
+          console.log(err);
+        });
+      },
+      ShowNoPublishCount(){
+        this.PublishTableData = this.NoPublishData;
+        this.dialogPublishListVisible = true;
+      },
+      ShowPublishCount(){
+        this.PublishTableData = this.PublishData;
+        this.dialogPublishListVisible = true;
       }
     }
   }

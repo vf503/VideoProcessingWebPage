@@ -11,7 +11,9 @@
       <el-menu-item index="1">课程</el-menu-item>
       <el-menu-item index="2">制作队列</el-menu-item>
       <!--<el-menu-item index="3">客户信息</el-menu-item>-->
+      <!--<el-menu-item index="4">讲师信息</el-menu-item>-->
       <!--<el-menu-item index="3">课程列表2</el-menu-item>-->
+      <el-menu-item index="5">文档 </el-menu-item>
 
     </el-menu>
   </div>
@@ -49,6 +51,14 @@
           else if (key==3)
           {
             this.$router.push('/CustomerEdit?'+UrlStr);
+          }
+          else if (key==4)
+          {
+            this.$router.push('/LecturerEdit?'+UrlStr);
+          }
+          else if (key==5)
+          {
+            this.$router.push('/DocumentEdit?'+UrlStr);
           }
         }
       }

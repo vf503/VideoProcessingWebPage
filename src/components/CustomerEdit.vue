@@ -300,7 +300,7 @@
       data() {
         return {
           //导航信息
-          MenuIndex: 2,
+          MenuIndex: 3,
           //用户
           UserId: '',
           MyToken:'',

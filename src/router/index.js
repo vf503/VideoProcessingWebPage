@@ -5,6 +5,11 @@ import LoginPage from '@/components/LoginPage'
 import TaskList from '@/components/TaskList'
 import CustomerEdit from '@/components/CustomerEdit'
 import SelectCourse from '@/components/SelectCourse'
+import LecturerEdit from '@/components/LecturerEdit'
+import DocumentEdit
+  from '@/components/DocumentEdit'
+import CoursePic
+  from '@/components/CoursePic'
 
 Vue.use(Router)
 
@@ -35,6 +40,23 @@ export default new Router({
       path: '/SelectCourse',
       name: 'SelectCourse',
       component: SelectCourse
+    }
+    ,
+    {
+      path: '/LecturerEdit',
+      name: 'LecturerEdit',
+      component: LecturerEdit
+    }
+    ,
+    {
+      path: '/DocumentEdit',
+      name: 'DocumentEdit',
+      component: DocumentEdit
+    },
+    {
+      path: '/CoursePic',
+      name: 'CoursePic',
+      component: CoursePic
     }
   ]
 })
