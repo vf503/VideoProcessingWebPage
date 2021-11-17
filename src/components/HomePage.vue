@@ -180,9 +180,10 @@
         <div class="search-table-head">
           <span>筛选结果</span>
           <div>
-            <el-button type="primary" v-show="showCreateWorkForm" @click="dialogWorkFormVisible = true;let now = new Date();newWorkFormId2=now.getHours().toString()+now.getMinutes().toString()+now.getSeconds().toString()">新建工单</el-button>
+            <el-button type="primary" v-show="showCreateWorkForm" @click="dialogWorkFormVisible = true;">新建工单</el-button>
             <el-button type="primary" v-show="showDealWorkForm" v-text="DealBtnText" @click="dialogDealWorkFormVisible = true"></el-button>
             <el-button type="primary" plain @click="exportAllChosenExcel">导出全部列表</el-button>
+            <el-button type="primary" plain @click="exportImportExcel">导出平台列表</el-button>
           </div>
 
           <el-table id="all_chosen_class_table" style="display: none;" ref="multipleTableChosen" :data="allTableChosen"
@@ -382,7 +383,7 @@
           <el-select v-model="newWorkFormSlideVideo"  placeholder="请选择">
             <el-option label="不需要" value="none"></el-option>
             <el-option label="1280*720" value="1280*720"></el-option>
-            <el-option label="720*576" value="720*576"></el-option>
+            <el-option label="1280*720_400k" value="1280*720_400k"></el-option>
             <el-option label="640*360" value="640*360"></el-option>
           </el-select>
         </el-col>
@@ -494,7 +495,7 @@
       </el-row>
     </el-dialog>
     <!--查看、处理工单对话框-->
-    <el-dialog :visible.sync="dialogDealWorkFormVisible" class="new-course-config" width="1400">
+    <el-dialog :visible.sync="dialogDealWorkFormVisible" class="new-course-config" width="1400"筛选结果>
       <div slot="title">{{DealWorkFormTitle}}</div>
       <el-card class="work-form-show-card" v-show="DealProjectVisible">
         <el-tag>工单信息</el-tag>
@@ -609,6 +610,7 @@
               <el-option label="1280*720" value="1280*720"></el-option>
               <!--<el-option label="720*576" value="720*576"></el-option>-->
               <el-option label="640*360" value="640*360"></el-option>
+              <el-option label="1280*720 1M" value="1280*720_1M"></el-option>
               <el-option label="1280*720 400K" value="1280:720_336k"></el-option>
             </el-select>
           </el-col>
@@ -700,14 +702,16 @@
             <el-select v-model="TestType" placeholder="请选择模板"  size="small" style="width: 150px;">
               <el-option label="无" value="none"></el-option>
               <el-option label="传统样式" value="0"></el-option>
+              <el-option label="平台导入" value="9"></el-option>
               <el-option label="北京干教网" value="4"></el-option>
               <el-option label="拉萨组织部" value="1"></el-option>
               <el-option label="山西交干院" value="2"></el-option>
               <el-option label="水利部" value="3"></el-option>
               <el-option label="天津港" value="5"></el-option>
               <el-option label="河北军转" value="6"></el-option>
-              <el-option label="甘肃" value="7"></el-option>
+              <!--<el-option label="甘肃" value="7"></el-option>-->
               <el-option label="南京人设" value="8"></el-option>
+              <el-option label="青海省委组织部" value="10"></el-option>
               <el-option label="JSON" value="json"></el-option>
             </el-select>
           </el-col>
@@ -1056,6 +1060,7 @@
         tableDataNew: [], /*当前已选新课列表*/
         tableDataOld: [], /*当前已选旧课列表*/
         allTableChosen: [], /*当前已选的所有课程列表——用于导出选中课程列表*/
+        ImportTable:[],
         newCourseIds: [], /*当前已选新课列表的课程id*/
         oldCourseIds: [], /*当前已选旧课列表的课程id*/
         allTableChosenId: [], /*当前已选课程列表的课程id*/
@@ -2097,6 +2102,43 @@
         }
         return wbout;
       },
+      exportImportExcel() {
+        this.ImportTable=[]
+        this.ImportTable = this.ImportTable.concat(this.tableDataNew)
+        this.ImportTable = this.ImportTable.concat(this.tableDataOld)
+        let res=[]
+        res[0]=["课件资料"]
+        res[1]=["知识体系","课件名","课件简介","课件类型","视频格式","课件来源","适用平台","关键词","标签","主讲人","主讲人职务","主讲人头衔","时长","学分","课件文件夹名","首页地址","讲师简介","讲师单位","讲师图片地址","所属课程名称","课件排序","课程图片"]
+        let count=2
+        this.ImportTable.forEach(function (item)
+        {
+          let index="";
+          if(item.CourseId.search("_") != -1)
+          {
+            if(parseInt(item.CourseId.split('_')[1]) > 0 && parseInt(item.CourseId.split('_')[1]) < 30)
+            {
+            index = item.CourseId.split('_')[1];
+            }
+          }
+          res[count]=[
+            "",item.title,item.CourseAbstract,"",item.TempletType,"","",item.KeyWords,"",item.lecturer_name,item.lecturer_post,"",item.duration,"",item.CourseId,"index.html","","","","",index,""
+          ];
+          count++;
+        });
+        //
+        var ws = XLSX.utils.aoa_to_sheet(res);
+        ws['!merges'] = [{s: {r:0,c:0},e: {r:0,c:21}}];
+        var wb = new XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+        /* get binary string as output */
+        var wbout = XLSX.write(wb, {bookType: 'xlsx', bookSST: true, type: 'array'});
+        try {
+          FileSaver.saveAs(new Blob([wbout], {type: 'application/octet-stream'}), '课程列表.xlsx')
+        } catch (e) {
+          if (typeof console !== 'undefined') console.log(e, wbout)
+        }
+        return wbout;
+      },
       fileSearch() {
         this.dialogTableVisible = true;
         this.myExcel = []
@@ -2510,6 +2552,18 @@
       },
       submitNewWorkForm() {
         var that = this;
+        let now = new Date();
+        var hh = now.getHours(); //时
+        var ii = now.getMinutes(); //分
+        var ss = now.getSeconds(); //秒
+        var time = "";
+        if (hh < 10) time += "0";
+        time += hh;
+        if (ii < 10) time += "0";
+        time += ii;
+        if (ss < 10) time += "0";
+        time += ss;
+        this.newWorkFormId2=time;
         this.newWorkFormId = this.newWorkFormId1 + '-' + this.newWorkFormNowDate + '-' + this.newWorkFormId2;
         // console.log(this.newWorkFormId);
         // console.log(this.newWorkFormUserInfo);
