@@ -554,7 +554,7 @@
         <el-tag  type="info">流程处理</el-tag>
         <el-row :gutter="20">
           <el-col :span="6">
-            <el-button type="primary" @click="submitSendingProject('help')" disabled>{{DealSendingHelpBtnText}}</el-button>
+            <el-button type="primary" @click="submitSendingProject('help')" :disabled="DealSendingHelpBtnState">{{DealSendingHelpBtnText}}</el-button>
           </el-col>
           <el-col :span="6">
             <el-button type="primary" @click="submitSendingProject('mchelp')" :disabled="DealSendingMcHelpBtnState">{{DealSendingMcHelpBtnText}}</el-button>
@@ -610,6 +610,7 @@
               <el-option label="1280*720" value="1280*720"></el-option>
               <!--<el-option label="720*576" value="720*576"></el-option>-->
               <el-option label="640*360" value="640*360"></el-option>
+              <el-option label="960*540" value="960*540"></el-option>
               <el-option label="1280*720 1M" value="1280*720_1M"></el-option>
               <el-option label="1280*720 400K" value="1280:720_336k"></el-option>
             </el-select>
@@ -640,7 +641,9 @@
               <el-option label="352*288" value="352*288"></el-option>
               <el-option label="640*360" value="640*360"></el-option>
               <el-option label="720*576" value="720*576"></el-option>
+              <el-option label="960*540" value="960*540"></el-option>
               <el-option label="1280*720" value="1280*720"></el-option>
+              <el-option label="1280*720 1M" value="1280*720_1M"></el-option>
               <el-option label="1280*720 400K" value="1280:720_336k"></el-option>
             </el-select>
           </el-col>
@@ -691,7 +694,10 @@
               <el-checkbox label="ppt">PPT</el-checkbox>
               <el-checkbox label="test">考题</el-checkbox>
               <el-checkbox label="summary">简介</el-checkbox>
+              <el-checkbox label="lecturerpic">教师图片</el-checkbox>
               <el-checkbox label="lecturer">教师简介</el-checkbox>
+              <el-checkbox label="srt">SRT</el-checkbox>
+              <el-checkbox label="slidetime">时间点</el-checkbox>
             </el-checkbox-group>
           </el-col>
         </el-row>
@@ -703,6 +709,7 @@
               <el-option label="无" value="none"></el-option>
               <el-option label="传统样式" value="0"></el-option>
               <el-option label="平台导入" value="9"></el-option>
+              <el-option label="福建党校" value="12"></el-option>
               <el-option label="北京干教网" value="4"></el-option>
               <el-option label="拉萨组织部" value="1"></el-option>
               <el-option label="山西交干院" value="2"></el-option>
@@ -712,6 +719,13 @@
               <!--<el-option label="甘肃" value="7"></el-option>-->
               <el-option label="南京人设" value="8"></el-option>
               <el-option label="青海省委组织部" value="10"></el-option>
+              <el-option label="北京铁路局" value="11"></el-option>
+              <el-option label="信息中心" value="13"></el-option>
+              <el-option label="云南组织部" value="14"></el-option>
+              <el-option label="成都市委党校" value="15"></el-option>
+              <el-option label="泸职院" value="16"></el-option>
+              <el-option label="绵阳人社" value="17"></el-option>
+              <el-option label="安徽专记" value="18"></el-option>
               <el-option label="JSON" value="json"></el-option>
             </el-select>
           </el-col>
@@ -746,6 +760,7 @@
             <el-select v-model="PicFormat" placeholder="格式" size="small" :disabled=" PIC=='false'?true:false">
               <el-option label="PNG" value="png"></el-option>
               <el-option label="JPG" value="jpg"></el-option>
+              <el-option label="GIF" value="gif"></el-option>
             </el-select>
           </el-col>
         </el-row>
@@ -1483,6 +1498,9 @@
           that.CustomerList = res.data.filter((t) => {
             return t.area == 'n'
           })
+          if (this.userType.search('SouthSeller;') != -1) {
+            that.CustomerList = res.data
+          }
           //console.log(that.CustomerList)
         }).catch(function (err) {
           console.log(err);
@@ -2722,7 +2740,10 @@
           "AttPPT": IsInArray(that.dealWorkAttachmentList, 'ppt'),
           "AttTest": TestType,
           "AttSummary": IsInArray(that.dealWorkAttachmentList, 'summary'),
+          "LecturerPic": IsInArray(that.dealWorkAttachmentList, 'lecturerpic'),
           "AttLecturer": IsInArray(that.dealWorkAttachmentList, 'lecturer'),
+          "SRT": IsInArray(that.dealWorkAttachmentList, 'srt'),
+          "SlideTimePoint": IsInArray(that.dealWorkAttachmentList, 'slidetime'),
           "SlideVideo": SlideVideo,
           "SlideVideoType": that.dealWorkFormSlideVideoType,
           "SlideVideoOP": that.dealWorkFormSlideVideoOP,
@@ -2949,6 +2970,11 @@
                 message: res.data
               });
               that.DealProjectBtnState = true;
+              that.DealSendingHelpBtnState= true;
+              that.DealSendingMcHelpBtnState= true;
+              that.DealSendingAttachmentBtnState= true;
+              that.DealSendingTemplateBtnState= true;
+              that.DealSendingPicBtnState= true;
               that.dialogWorkFormVisible = false;
             } else if (res.status == 204) {
               that.$message({

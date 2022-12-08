@@ -4,7 +4,19 @@
     <div style="margin: 20px 10px 0px 10px">
       <el-input
         v-model="NameSearch"
-        placeholder="名称搜索"
+        placeholder="姓名"
+        style="width: 200px"
+      >
+      </el-input>
+      <el-input
+        v-model="JobSearch"
+        placeholder="职务"
+        style="width: 300px"
+      >
+      </el-input>
+      <el-input
+        v-model="IntroSearch"
+        placeholder="简介"
         style="width: 500px"
       >
       </el-input>
@@ -13,13 +25,14 @@
         <el-button type="primary" size="mini" @click="handleAdd">新增</el-button>
       </div>
       <el-table
-        :data="LecturerData.slice((currentPage-1)*pageSize,currentPage*pageSize)"
+        :data="LecturerData"
         style="width: 100%"
         v-loading="loading">
+        <el-table-column prop="LecturerId" label="编号" width="200"></el-table-column>
         <el-table-column prop="name" label="姓名" width="200"></el-table-column>
         <el-table-column prop="post" label="职务" width="300"></el-table-column>
         <el-table-column prop="introduction" label="简介" width="550" show-overflow-tooltip></el-table-column>
-        <el-table-column prop="keyword" label="关键词" width="300"></el-table-column>
+        <!--<el-table-column prop="keyword" label="关键词" width="300"></el-table-column>-->
         <el-table-column label="操作" width="200">
           <template slot-scope="scope">
             <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">查看/编辑</el-button>
@@ -33,6 +46,7 @@
                      @size-change="handleSizeChange"
                      :current-page.sync="currentPage"
                      :total="total"
+                     :page-size="50"
                      background>
       </el-pagination>
     </div>
@@ -49,7 +63,7 @@
           :http-request="uploadFile"
           >
           <el-button size="mini" type="primary">点击上传</el-button>
-          <div slot="tip" class="el-upload__tip">只能上传jpg文件</div>
+          <div slot="tip" class="el-upload__tip">只能上传JPG、PNG文件</div>
         </el-upload>
       </el-card>
       <el-card class="box-card">
@@ -57,7 +71,10 @@
         <el-input size="mini" placeholder="关键字" v-model="CurrentRow.keyword" ></el-input>
       </el-card>
       <el-card class="box-card" v-show="ExtInfoVisible">
-        <el-input size="mini" type="textarea" placeholder="联系方式" v-model="CurrentRow.contact" ></el-input>
+        <el-input size="mini" type="textarea" placeholder="电话" v-model="CurrentRow.tel" ></el-input>
+        <el-input size="mini" type="textarea" placeholder="手机" v-model="CurrentRow.contact" ></el-input>
+        <el-input size="mini" type="textarea" placeholder="邮箱" v-model="CurrentRow.mail" ></el-input>
+        <el-input size="mini" type="textarea" placeholder="微信" v-model="CurrentRow.wechat" ></el-input>
         <el-input size="mini" type="textarea" placeholder="评价" v-model="CurrentRow.note" ></el-input>
       </el-card>
       <el-card class="box-card">
@@ -143,13 +160,15 @@
         //数据
         LecturerData:[],
         NameSearch: '',
+        JobSearch: '',
+        IntroSearch: '',
         CurrentRow:{},
         CurrentRowIndex:0,
         ImgSrc:"",
         CourseId:"none",
         //
         total:0,//默认数据总数
-        pageSize:10,//每页的数据条数
+        pageSize:50,//每页的数据条数
         currentPage:1,//默认开始页面
         //
         loading:false,
@@ -165,7 +184,7 @@
       var GlobalThis = this;
       this.keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
       Request = this.getRequest();
-      var modeLogin = this.decode(Request["login"]);
+      var modeLogin = this.decode(Request["login"].replace("=",""));
       var modeUserName = modeLogin.split('_')[0];
       var modePassword = modeLogin.split('_')[1];
       this.userName = modeUserName;
@@ -183,6 +202,7 @@
             GlobalThis.userName = modeUserName;
             console.log(GlobalThis.MyToken);
             //
+            GlobalThis.DataSearch();
           }
         })
         .catch(function (error) {
@@ -220,6 +240,7 @@
         console.log(Request["cid"]);
         this.CourseId=Request["cid"];
       }
+      //
     },
     methods: {
       //appHead
@@ -238,20 +259,22 @@
         else {
           url="http://newpms.cei.cn/lecturerl/";
         }
-        axios.get(url+"?name="+ encodeURI(that.NameSearch), {headers: {'Authorization': 'JWT ' + this.MyToken}})
+        axios.get(url+"?name="+ encodeURI(that.NameSearch)+"&post="+ encodeURI(that.JobSearch)+"&introduction="+ encodeURI(that.IntroSearch)+"&current="+this.currentPage+"&size="+this.pageSize, {headers: {'Authorization': 'JWT ' + this.MyToken}})
           .then(function (response) {
-            //that.CustomerData=response.data;
-            that.LecturerData=that.null2str(response.data);
-            that.LecturerData=that.LecturerData.filter(data => !that.LecturerData || data.name.toLowerCase().includes(that.NameSearch.toLowerCase()));
-            that.total= that.LecturerData.length;
+            let res=that.null2str(response.data);
+            //that.LecturerData=that.LecturerData.filter(data => !that.LecturerData || data.name.toLowerCase().includes(that.NameSearch.toLowerCase()));
+            res=JSON.parse(res);
+            console.log(res);
+            that.LecturerData=res.data;
+            that.total= res.total;
             that.loading = false;
           })
         this.currentPage=1;
       },
       handleCurrentChange(val) {
         // 改变默认的页数
+        this. DataSearch(this.currentPage,this.pageSize);
         this.currentPage=val;
-        //this.search();
       },
       handleSizeChange(val) {
         // 改变每页显示的条数
@@ -279,6 +302,9 @@
             "note":null,
             "keyword":null,
             "contact":null,
+            "tel":null,
+            "mail":null,
+            "wechat":null,
             "ExtendedData":null,
             "lecturer_history":[]
           }
@@ -377,13 +403,13 @@
         })
       },
       getRequest() {
-        var url = unescape(window.location.href); //获取url中"?"符后的字串
+        var url = decodeURIComponent(window.location.href); //获取url中"?"符后的字串
         var theRequest = new Object();
         if (url.indexOf("?") != -1) {
           var str = url.split("?")[1];
           var strs = str.split("&");
           for (var i = 0; i < strs.length; i++) {
-            theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+            theRequest[strs[i].split("=")[0]] = decodeURIComponent(strs[i].substr(strs[i].indexOf("=")+1));
           }
         }
         return theRequest;

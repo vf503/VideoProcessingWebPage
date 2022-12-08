@@ -12,6 +12,8 @@ import CoursePic
   from '@/components/CoursePic'
 import BgPicEdit
   from '@/components/BgPicEdit'
+import PicEdit
+  from '@/components/PicEdit'
 
 Vue.use(Router)
 
@@ -64,6 +66,11 @@ export default new Router({
       path: '/BgPicEdit',
       name: 'BgPicEdit',
       component: BgPicEdit
+    },
+    {
+      path: '/PicEdit',
+      name: 'PicEdit',
+      component: PicEdit
     }
   ]
 })

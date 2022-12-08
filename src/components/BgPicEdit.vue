@@ -258,7 +258,6 @@
     },
     methods: {
       handleCleanCategory(){
-          this.CurrentCourseName='',
           this.CurrentCategoryName='',
           this.CurrentCategoryId=null,
           this.CurrentCategoryLevel=0,
