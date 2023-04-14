@@ -32,6 +32,7 @@
         <el-table-column prop="name" label="姓名" width="200"></el-table-column>
         <el-table-column prop="post" label="职务" width="300"></el-table-column>
         <el-table-column prop="introduction" label="简介" width="550" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="auth" label="师资证明" width="50" :formatter="stateAuth"></el-table-column>
         <!--<el-table-column prop="keyword" label="关键词" width="300"></el-table-column>-->
         <el-table-column label="操作" width="200">
           <template slot-scope="scope">
@@ -62,9 +63,24 @@
           :file-list="PicfileList"
           :http-request="uploadFile"
           >
-          <el-button size="mini" type="primary">点击上传</el-button>
+          <el-button size="mini" type="primary">点击上传图片</el-button>
           <div slot="tip" class="el-upload__tip">只能上传JPG、PNG文件</div>
         </el-upload>
+        <br/>
+        <el-upload
+          class="upload"
+          action="https://jsonplaceholder.typicode.com/posts/"
+          multiple
+          :limit="1"
+          :on-exceed="handleAuthExceed"
+          :file-list="AuthfileList"
+          :http-request="uploadAuthFile"
+        >
+        <el-button size="mini" type="primary">点击上传师资职称证明</el-button>
+        </el-upload>
+        <br/>
+        <!--<el-input size="mini" type="textarea" placeholder="" v-model="CurrentRow.auth"></el-input>-->
+        <el-link icon="el-icon-s-check" type="primary" :href="AuthSrc" v-show="(CurrentRow.auth ==null?false:true) && (CurrentRow.auth ==''?false:true)">下载师资职称证明</el-link>
       </el-card>
       <el-card class="box-card">
         <el-input size="small" placeholder="姓名" v-model="CurrentRow.name" ></el-input>
@@ -165,6 +181,7 @@
         CurrentRow:{},
         CurrentRowIndex:0,
         ImgSrc:"",
+        AuthSrc:"",
         CourseId:"none",
         //
         total:0,//默认数据总数
@@ -177,6 +194,7 @@
         //
         PicFile: {},
         PicfileList:[],
+        AuthfileList:[]
       }
     },
     mounted(){
@@ -279,6 +297,7 @@
       handleSizeChange(val) {
         // 改变每页显示的条数
         this.pageSize=val
+        this. DataSearch(this.currentPage,this.pageSize);
         // 注意：在改变每页显示的条数时，要将页码显示到第一页
         this.currentPage=1
       },
@@ -288,7 +307,10 @@
         this.CurrentRowIndex=index;
         if(this.CurrentRow.PhotoSrc==""){this.CurrentRow.PhotoSrc="nobody.jpg"}
         this.ImgSrc="http://newpms.cei.cn/LecturerFile/"+this.CurrentRow.PhotoSrc;
+        this.AuthSrc="http://newpms.cei.cn/LecturerFile/Auth/"+this.CurrentRow.auth;
         console.log(this.CurrentRow,this.CurrentRowIndex);
+        //console.log(this.CurrentRow.auth);
+        //console.log(this.CurrentRow.auth ==null?false:true);
       },
       handleAdd(){
         var lecturer  =
@@ -370,6 +392,9 @@
       handlePICExceed(files, PicfileList) {
         this.$message.warning(`只能上传1个文件`);
       },
+      handleAuthExceed(files, AuthfileList) {
+        this.$message.warning(`只能上传1个文件`);
+      },
       uploadFile(param) {
         const formdata = new FormData()
         formdata.append('pic', param.file)
@@ -401,6 +426,45 @@
               GlobalThis.PicfileList=[]
           }
         })
+      },
+      uploadAuthFile(param) {
+        const formdata = new FormData()
+        formdata.append('auth', param.file)
+        formdata.append('id', this.CurrentRow.LecturerId)
+        formdata.append('name', this.CurrentRow.LecturerId +"."+ param.file.name.split('.').pop())
+        //formdata.append('_csrfToken', this.$ajax.getCsrfToken()._csrfToken)
+        console.log(this.CurrentRow.LecturerId + param.file.name.split('.').pop());
+        var GlobalThis = this;
+        this.$axios({
+          method: 'post',
+          url: 'http://newpms.cei.cn/UpdateLecturerAuth/',
+          //headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          data: formdata
+        }).then(function (res) {
+          if (res.status == 202) {
+            GlobalThis.AuthfileList=[];
+            GlobalThis.$message({
+              type: 'warning',
+              message: res.data.res
+            });
+          }
+          if (res.status == 200) {
+            GlobalThis.$message({
+              type: 'success',
+              message: `证明已上传`
+            }),
+              GlobalThis.CurrentRow.auth = res.data.res,
+              GlobalThis.AuthSrc = "http://newpms.cei.cn/LecturerFile/Auth/" + GlobalThis.CurrentRow.auth,
+              GlobalThis.AuthfileList=[]
+          }
+        })
+      },
+      stateAuth(row, column) {
+        if (row.auth === null ||row.auth === '') {
+            return '无'
+        } else{
+          return '有'
+        }
       },
       getRequest() {
         var url = decodeURIComponent(window.location.href); //获取url中"?"符后的字串

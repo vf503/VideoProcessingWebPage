@@ -14,6 +14,8 @@ import BgPicEdit
   from '@/components/BgPicEdit'
 import PicEdit
   from '@/components/PicEdit'
+import FontPicEdit
+  from '@/components/FontPicEdit'
 
 Vue.use(Router)
 
@@ -71,6 +73,11 @@ export default new Router({
       path: '/PicEdit',
       name: 'PicEdit',
       component: PicEdit
+    },
+    {
+      path: '/FontPicEdit',
+      name: 'FontPicEdit',
+      component: FontPicEdit
     }
   ]
 })

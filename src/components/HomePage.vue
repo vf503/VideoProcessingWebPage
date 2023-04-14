@@ -726,6 +726,8 @@
               <el-option label="泸职院" value="16"></el-option>
               <el-option label="绵阳人社" value="17"></el-option>
               <el-option label="安徽专记" value="18"></el-option>
+              <el-option label="湖南继教云" value="19"></el-option>
+              <el-option label="浙能" value="20"></el-option>
               <el-option label="JSON" value="json"></el-option>
             </el-select>
           </el-col>
